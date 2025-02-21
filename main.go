@@ -37,7 +37,7 @@ import (
 )
 
 // Version of the bot
-const Version = "1.5"
+const Version = "1.5.1"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   ___     _   
@@ -56,6 +56,7 @@ type Config struct {
 	LLM struct {
 		Provider       string `toml:"provider"`
 		OllamaModel    string `toml:"ollama_model"`
+		PromptAddition string `toml:"prompt_additional_instructions"`
 		PromptOverride string `toml:"prompt_override"`
 	} `toml:"llm"`
 	TransformersServerArgs struct {
@@ -276,9 +277,12 @@ func main() {
 	}
 
 	PromptOverrideState = config.LLM.PromptOverride != ""
+	PromptAdditionState = config.LLM.PromptAddition != ""
 
 	if PromptOverrideState {
 		fmt.Printf("%s Prompt Override: Set to \"%.30s...\"\n", getStatusSymbol(true), config.LLM.PromptOverride)
+	} else if PromptAdditionState {
+		fmt.Printf("%s Prompt Additional Instructions: Set to \"%.30s...\"\n", getStatusSymbol(true), config.LLM.PromptAddition)
 	} else {
 		fmt.Printf("%s Default Prompts: %s\n", getStatusSymbol(true), "Loaded")
 	}
