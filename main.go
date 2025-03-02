@@ -37,7 +37,7 @@ import (
 )
 
 // Version of the bot
-const Version = "1.5"
+const Version = "1.5.1"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   ___     _   
@@ -54,9 +54,11 @@ type Config struct {
 		Username       string `toml:"username"`
 	} `toml:"server"`
 	LLM struct {
-		Provider       string `toml:"provider"`
-		OllamaModel    string `toml:"ollama_model"`
-		PromptOverride string `toml:"prompt_override"`
+		Provider            string `toml:"provider"`
+		OllamaModel         string `toml:"ollama_model"`
+		UseTranslationLayer bool   `toml:"use_translation_layer"`
+		PromptAddition      string `toml:"prompt_additional_instructions"`
+		PromptOverride      string `toml:"prompt_override"`
 	} `toml:"llm"`
 	TransformersServerArgs struct {
 		Port       int     `toml:"port"`
@@ -276,9 +278,12 @@ func main() {
 	}
 
 	PromptOverrideState = config.LLM.PromptOverride != ""
+	PromptAdditionState = config.LLM.PromptAddition != ""
 
 	if PromptOverrideState {
 		fmt.Printf("%s Prompt Override: Set to \"%.30s...\"\n", getStatusSymbol(true), config.LLM.PromptOverride)
+	} else if PromptAdditionState {
+		fmt.Printf("%s Prompt Additional Instructions: Set to \"%.30s...\"\n", getStatusSymbol(true), config.LLM.PromptAddition)
 	} else {
 		fmt.Printf("%s Default Prompts: %s\n", getStatusSymbol(true), "Loaded")
 	}
@@ -912,7 +917,7 @@ func generateImageAltText(imageURL string, lang string) (string, error) {
 
 	fmt.Println("Processing image: " + imageURL)
 
-	altText, err := llmProvider.GenerateAltText(prompt, downscaledImg, format)
+	altText, err := llmProvider.GenerateAltText(prompt, downscaledImg, format, lang)
 	if err != nil {
 		return "", err
 	}

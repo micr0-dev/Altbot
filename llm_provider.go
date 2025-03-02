@@ -21,7 +21,7 @@ import (
 
 // LLMProvider interface defines the methods that all LLM providers must implement
 type LLMProvider interface {
-	GenerateAltText(prompt string, imageData []byte, format string) (string, error)
+	GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error)
 	Close() error
 }
 
@@ -112,7 +112,7 @@ func setupOllamaProvider(config Config) (*OllamaProvider, error) {
 }
 
 // GenerateAltText implementations for each provider
-func (p *GeminiProvider) GenerateAltText(prompt string, imageData []byte, format string) (string, error) {
+func (p *GeminiProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
 	var parts []genai.Part
 	parts = append(parts, genai.Text(prompt))
 	parts = append(parts, genai.ImageData(format, imageData))
@@ -125,7 +125,13 @@ func (p *GeminiProvider) GenerateAltText(prompt string, imageData []byte, format
 	return getResponse(resp), nil
 }
 
-func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format string) (string, error) {
+func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
+	if config.LLM.UseTranslationLayer && targetLanguage != "en" {
+		// Use translation layer
+		translationLayer := NewTranslationLayer(p)
+		return translationLayer.GenerateAndTranslateAltText(prompt, imageData, format, targetLanguage)
+	}
+
 	// Create a temporary file for the image
 	tmpFile, err := os.CreateTemp("", "image.*."+format)
 	if err != nil {
@@ -154,7 +160,13 @@ func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format
 	return out.String(), nil
 }
 
-func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, format string) (string, error) {
+func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
+	if config.LLM.UseTranslationLayer && targetLanguage != "en" {
+		// Use translation layer
+		translationLayer := NewTranslationLayer(p)
+		return translationLayer.GenerateAndTranslateAltText(prompt, imageData, format, targetLanguage)
+	}
+
 	// Convert image to base64
 	base64Image := base64.StdEncoding.EncodeToString(imageData)
 

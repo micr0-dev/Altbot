@@ -12,6 +12,8 @@ username = "your_bot_username"                   # Your Mastodon bot's username
 [llm]
 provider = "gemini"         # can be "gemini", "ollama", or "transformers"
 ollama_model = "llava-phi3"
+use_translation_layer = true # Enable translation layer for local LLMs
+prompt_additional_instructions = "" # Additional instructions to be added to the prompt (Note: The same instructions will be added to every language)
 prompt_override = "" # WARNING: This will override the prompt making the bot only generate alt-text in one language
 
 [transformers]

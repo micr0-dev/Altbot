@@ -14,6 +14,7 @@ type Localization struct {
 var localizations map[string]Localization
 
 var PromptOverrideState bool
+var PromptAdditionState bool
 
 func loadLocalizations() error {
 	data, err := os.ReadFile("localizations.json")
@@ -37,12 +38,19 @@ func getLocalizedString(lang, key string, category string) string {
 
 	switch category {
 	case "prompt":
+		var prompt string
 		if PromptOverrideState {
-			return config.LLM.PromptOverride
+			prompt = config.LLM.PromptOverride
 		}
 		if value, ok := localization.Prompts[key]; ok {
-			return value
+			prompt = value
 		}
+
+		if PromptAdditionState {
+			prompt += " " + config.LLM.PromptAddition
+		}
+
+		return prompt
 	case "response":
 		if value, ok := localization.Responses[key]; ok {
 			return value
