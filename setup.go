@@ -11,6 +11,7 @@ import (
 )
 
 // RunSetupWizard guides the user through setup and writes config to a file
+// RunSetupWizard guides the user through setup and writes config to a file
 func runSetupWizard(filePath string) {
 	fmt.Println(Cyan + "Welcome to the AltBot Setup Wizard!" + Reset)
 
@@ -25,6 +26,40 @@ func runSetupWizard(filePath string) {
 	config.Server.Username = promptString(Yellow+"Bot Username:"+Reset, config.Server.Username)
 
 	config.RateLimit.AdminContactHandle = promptString(Red+"Admin Contact Handle:"+Reset, config.RateLimit.AdminContactHandle)
+
+	// LLM provider selection
+	providerOptions := []string{"gemini", "ollama", "transformers"}
+	fmt.Println(Blue + "Select LLM Provider:" + Reset)
+	for i, option := range providerOptions {
+		fmt.Printf("%d. %s\n", i+1, option)
+	}
+
+	var providerChoice int
+	for {
+		fmt.Print(Blue + "Enter choice (1-3): " + Reset)
+		fmt.Scanln(&providerChoice)
+		if providerChoice >= 1 && providerChoice <= len(providerOptions) {
+			break
+		}
+		fmt.Println(Red + "Invalid choice. Please try again." + Reset)
+	}
+	config.LLM.Provider = providerOptions[providerChoice-1]
+
+	// Add translation layer option for local LLMs
+	if config.LLM.Provider == "ollama" || config.LLM.Provider == "transformers" {
+		fmt.Println(Yellow + "\nLocal LLMs often perform better at generating alt-text in English." + Reset)
+		fmt.Println("The translation layer will:")
+		fmt.Println("1. Generate alt-text in English first")
+		fmt.Println("2. Then translate to the target language")
+		config.LLM.UseTranslationLayer = promptBool(Cyan+"Enable translation layer (true/false)?"+Reset, "true")
+
+		if config.LLM.Provider == "ollama" {
+			config.LLM.OllamaModel = promptString(Green+"Ollama Model Name:"+Reset, config.LLM.OllamaModel)
+		}
+	} else if config.LLM.Provider == "gemini" {
+		config.Gemini.APIKey = promptString(Green+"Gemini API Key:"+Reset, config.Gemini.APIKey)
+		config.Gemini.Model = promptString(Yellow+"Gemini Model (gemini-1.5-flash/gemini-1.5-pro):"+Reset, config.Gemini.Model)
+	}
 
 	config.RateLimit.Enabled = promptBool(Cyan+"Enable Rate Limiting (true/false)?"+Reset, fmt.Sprintf("%t", config.RateLimit.Enabled))
 	config.WeeklySummary.Enabled = promptBool(Blue+"Enable Weekly Summary (true/false)?"+Reset, fmt.Sprintf("%t", config.WeeklySummary.Enabled))

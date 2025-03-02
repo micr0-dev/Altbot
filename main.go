@@ -54,10 +54,11 @@ type Config struct {
 		Username       string `toml:"username"`
 	} `toml:"server"`
 	LLM struct {
-		Provider       string `toml:"provider"`
-		OllamaModel    string `toml:"ollama_model"`
-		PromptAddition string `toml:"prompt_additional_instructions"`
-		PromptOverride string `toml:"prompt_override"`
+		Provider            string `toml:"provider"`
+		OllamaModel         string `toml:"ollama_model"`
+		UseTranslationLayer bool   `toml:"use_translation_layer"`
+		PromptAddition      string `toml:"prompt_additional_instructions"`
+		PromptOverride      string `toml:"prompt_override"`
 	} `toml:"llm"`
 	TransformersServerArgs struct {
 		Port       int     `toml:"port"`
@@ -916,7 +917,7 @@ func generateImageAltText(imageURL string, lang string) (string, error) {
 
 	fmt.Println("Processing image: " + imageURL)
 
-	altText, err := llmProvider.GenerateAltText(prompt, downscaledImg, format)
+	altText, err := llmProvider.GenerateAltText(prompt, downscaledImg, format, lang)
 	if err != nil {
 		return "", err
 	}
