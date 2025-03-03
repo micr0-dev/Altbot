@@ -127,10 +127,11 @@ func (mm *MetricsManager) logFollow(userID string) {
 }
 
 // logSuccessfulGeneration logs a successful alt-text generation
-func (mm *MetricsManager) logSuccessfulGeneration(userID, mediaType string, responseTimeMillis int64) {
+func (mm *MetricsManager) logSuccessfulGeneration(userID, mediaType string, responseTimeMillis int64, lang string) {
 	details := map[string]interface{}{
 		"mediaType":    mediaType,
 		"responseTime": responseTimeMillis,
+		"lang":         lang,
 	}
 	mm.logEvent(userID, "successful_generation", details)
 }
