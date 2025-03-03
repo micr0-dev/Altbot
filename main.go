@@ -761,7 +761,7 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 			mu.Unlock()
 			altTextGenerated = true
 
-			metricsManager.logSuccessfulGeneration(string(replyPost.Account.ID), attachment.Type, elapsed)
+			metricsManager.logSuccessfulGeneration(string(replyPost.Account.ID), attachment.Type, elapsed, replyPost.Language)
 		}(attachment)
 	}
 

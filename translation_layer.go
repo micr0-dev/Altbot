@@ -1,4 +1,3 @@
-// translation_layer.go
 package main
 
 import (
