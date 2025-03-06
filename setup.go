@@ -66,6 +66,29 @@ func runSetupWizard(filePath string) {
 	config.Metrics.Enabled = promptBool(Cyan+"Enable Metrics (true/false)?"+Reset, fmt.Sprintf("%t", config.Metrics.Enabled))
 	config.Metrics.DashboardEnabled = promptBool(Blue+"Enable Metrics Dashboard (true/false)?"+Reset, fmt.Sprintf("%t", config.Metrics.DashboardEnabled))
 	config.AltTextReminders.Enabled = promptBool(Cyan+"Enable Alt-Text Reminders (true/false)?"+Reset, fmt.Sprintf("%t", config.AltTextReminders.Enabled))
+	
+	// Power metrics section (only relevant for local models)
+	if config.LLM.Provider == "ollama" || config.LLM.Provider == "transformers" {
+		fmt.Println(Green + "\nPower Metrics Settings:" + Reset)
+		fmt.Println("This feature shows the estimated electricity used for each alt-text generation.")
+		
+		config.PowerMetrics.Enabled = promptBool(Cyan+"Enable Power Consumption Metrics (true/false)?"+Reset, fmt.Sprintf("%t", config.PowerMetrics.Enabled))
+		
+		if config.PowerMetrics.Enabled {
+			// Convert the float to a string for the prompt
+			gpuWattsStr := fmt.Sprintf("%.1f", config.PowerMetrics.GPUWatts)
+			gpuWattsInput := promptString(Yellow+"GPU Power Consumption (watts):"+Reset, gpuWattsStr)
+			config.PowerMetrics.GPUWatts = parseFloat(gpuWattsInput, config.PowerMetrics.GPUWatts)
+			
+			config.PowerMetrics.ShowComparison = promptBool(Green+"Show Comparison to Cloud AI (true/false)?"+Reset, fmt.Sprintf("%t", config.PowerMetrics.ShowComparison))
+			
+			if config.PowerMetrics.ShowComparison {
+				cloudKWhStr := fmt.Sprintf("%.7f", config.PowerMetrics.CloudKWhPerRequest)
+				cloudKWhInput := promptString(Blue+"Estimated Cloud AI kWh per request:"+Reset, cloudKWhStr)
+				config.PowerMetrics.CloudKWhPerRequest = parseFloat(cloudKWhInput, config.PowerMetrics.CloudKWhPerRequest)
+			}
+		}
+	}
 
 	saveConfig(filePath)
 
@@ -106,6 +129,18 @@ func promptBool(prompt, defaultValue string) bool {
 			fmt.Println(Red + "Please enter 'true' or 'false'." + Reset)
 		}
 	}
+}
+
+// parseFloat parses a string to a float64, returning defaultValue if parsing fails
+func parseFloat(input string, defaultValue float64) float64 {
+	// Try to parse the input string as a float64
+	var value float64
+	_, err := fmt.Sscanf(input, "%f", &value)
+	if err != nil {
+		fmt.Printf(Red+"Error parsing float value, using default: %v"+Reset+"\n", defaultValue)
+		return defaultValue
+	}
+	return value
 }
 
 // saveConfig writes the config struct to a file named config.toml

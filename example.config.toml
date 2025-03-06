@@ -80,6 +80,12 @@ enabled = true # Set to false to completely disable all metrics collection and l
 dashboard_enabled = true # Set to false to disable the metrics dashboard
 dashboard_port = 8080 # Port for the metrics dashboard
 
+[power_metrics]
+enabled = true                # Whether to show power consumption
+gpu_watts = 75                # Constant power consumption in watts
+show_comparison = true        # Whether to show comparison to cloud AI
+cloud_kwh_per_request = 0.0005  # Estimated kWh per request for cloud AI
+
 [alt_text_reminders]
 enabled = true # Enable or disable the alt-text reminder feature
 reminder_time = 10 # How long to wait before reminding users to add alt-text to their images (in minutes) if they haven't already

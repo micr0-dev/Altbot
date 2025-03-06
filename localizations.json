@@ -7,7 +7,10 @@
         },
         "responses": {
             "altTextError": "Sorry, I couldn't process this image.",
-            "consentRequest": "This bot has been asked to generate an alt text for your image by @%s. If you consent, your media will be uploaded to Google Gemini and might be used for training purposes. More information in my bio. \nDo you consent? Reply with 'Y' or 'Yes' to proceed.",
+            "consentRequest": "This bot has been asked to generate an alt text for your image by @%s. If you consent, you will this will grant us a one-time permission to process this specific post. All processing is done privetly with no third-parties. Any and all content is deleted after processing. \nDo you consent? Reply with 'Y' or 'Yes' to proceed.",
+            "gdprConsentRequest": "I need your explicit consent before processing your requests. As part of GDPR compliance:\n\n✅ I collect: Request timestamps, processing times, and language preferences\n❌ I don't store: Images, personal information, or content of your posts\n\nTo provide consent, please reply \"Yes\" or \"I agree\"\nTo revoke consent at any time, simply block this account.\n\nOur full privacy policy: https://github.com/micr0-dev/AltBot/blob/main/PRIVACY.md",
+            "gdprConsentConfirmation": "Thank you! Your consent has been recorded. I'll now process your requests in accordance with our privacy policy. You can revoke consent at any time by blocking this account.",
+            "gdprWelcomeMessage": "Welcome! To use my services, I need your explicit consent.",
             "imageAlreadyHasAltText": "This image already has alt-text",
             "unsupportedFile": "This file is unsupported, only images, videos, and audio files are currently supported",
             "providedByMessage": "Provided by @%s, generated using %s",

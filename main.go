@@ -105,6 +105,12 @@ type Config struct {
 		DashboardEnabled bool `toml:"dashboard_enabled"`
 		DashboardPort    int  `toml:"dashboard_port"`
 	} `toml:"metrics"`
+	PowerMetrics struct {
+		Enabled            bool    `toml:"enabled"`
+		GPUWatts           float64 `toml:"gpu_watts"`
+		ShowComparison     bool    `toml:"show_comparison"`
+		CloudKWhPerRequest float64 `toml:"cloud_kwh_per_request"`
+	} `toml:"power_metrics"`
 	RateLimit struct {
 		Enabled                        bool   `toml:"enabled"`
 		MaxRequestsPerMinute           int    `toml:"max_requests_per_user_per_minute"`
@@ -357,7 +363,13 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("%s Consent System: %v\n", getStatusSymbol(config.Behavior.AskForConsent), config.Behavior.AskForConsent)
+	// Initialize GDPR consent database
+	if err := InitializeConsentDatabase(); err != nil {
+		log.Fatalf("Error initializing GDPR consent database: %v", err)
+	}
+
+	fmt.Printf("%s GDPR Consent System: %s\n", getStatusSymbol(true), "Enabled")
+	fmt.Printf("%s Legacy Consent System: %v\n", getStatusSymbol(config.Behavior.AskForConsent), config.Behavior.AskForConsent)
 
 	// Start metrics manager
 	metricsManager = NewMetricsManager(config.Metrics.Enabled, "metrics.json", 10*time.Second)
@@ -370,6 +382,17 @@ func main() {
 		fmt.Printf("%s Metrics Dashboard: %s\n", getStatusSymbol(true), "http://localhost:"+strconv.Itoa(config.Metrics.DashboardPort))
 	} else {
 		fmt.Printf("%s Metrics Dashboard: %v\n", getStatusSymbol(false), config.Metrics.DashboardEnabled)
+	}
+
+	// Display power metrics status if using a local model
+	if config.LLM.Provider != "gemini" {
+		powerMetricsStatus := fmt.Sprintf("%v (%.1f watts)", config.PowerMetrics.Enabled, config.PowerMetrics.GPUWatts)
+		fmt.Printf("%s Power Consumption Metrics: %s\n", getStatusSymbol(config.PowerMetrics.Enabled), powerMetricsStatus)
+
+		if config.PowerMetrics.Enabled && config.PowerMetrics.ShowComparison {
+			fmt.Printf("%s Cloud AI Comparison: Enabled (%.7f kWh/request)\n",
+				getStatusSymbol(true), config.PowerMetrics.CloudKWhPerRequest)
+		}
 	}
 
 	fmt.Println("\n-----------------------------------")
@@ -425,7 +448,11 @@ func main() {
 					if _, isConsentRequest := consentRequests[grandparentStatusID]; isConsentRequest {
 						handleConsentResponse(c, grandparentStatusID, e.Notification.Status)
 					} else {
-						handleMention(c, e.Notification)
+						// Check if this might be a GDPR consent response
+						isGDPRConsent := HandleGDPRConsentResponse(c, e.Notification.Status)
+						if !isGDPRConsent {
+							handleMention(c, e.Notification)
+						}
 					}
 				} else {
 					handleMention(c, e.Notification)
@@ -538,6 +565,22 @@ func handleMention(c *mastodon.Client, notification *mastodon.Notification) {
 	if len(status.MediaAttachments) == 0 {
 		return
 	}
+
+	// Check for GDPR consent first
+	userID := string(notification.Account.ID)
+
+	// If user hasn't provided GDPR consent, request it first
+	if !HasUserConsent(userID) {
+		log.Printf("User %s has not provided GDPR consent, requesting it", notification.Account.Acct)
+
+		_, err := RequestGDPRConsent(c, userID, notification.Account.Acct, notification.Status.Language, notification.Status.ID)
+		if err != nil {
+			log.Printf("Error requesting GDPR consent: %v", err)
+		}
+		return
+	}
+
+	// GDPR consent is provided, continue with legacy consent flow
 
 	// Check if the person who mentioned the bot is the OP
 	if status.Account.ID == notification.Account.ID {
@@ -660,6 +703,31 @@ func isDNI(account *mastodon.Account) bool {
 
 // handleFollow processes new follows and follows back
 func handleFollow(c *mastodon.Client, notification *mastodon.Notification) {
+	userID := string(notification.Account.ID)
+
+	// Check if the user has already provided GDPR consent
+	if !HasUserConsent(userID) {
+		// Send a welcome message with GDPR consent request
+		log.Printf("New follower %s, sending GDPR consent request", notification.Account.Acct)
+
+		messege := getLocalizedString("en", "gdprWelcomeMessage", "response") // Hardcoded to English cuz we don't have the user's language
+		toot := &mastodon.Toot{
+			Status:     fmt.Sprintf("@%s %s", notification.Account.Acct, messege),
+			Visibility: "direct",
+		}
+
+		status, err := c.PostStatus(ctx, toot)
+		if err != nil {
+			log.Printf("Error posting welcome message: %v", err)
+		} else {
+			// Now send the GDPR consent request as a reply to our welcome message
+			_, err := RequestGDPRConsent(c, userID, notification.Account.Acct, "en", status.ID) // Hardcoded to English cuz we don't have the user's language
+			if err != nil {
+				log.Printf("Error requesting GDPR consent: %v", err)
+			}
+		}
+	}
+
 	if config.Behavior.FollowBack {
 		_, err := c.AccountFollow(ctx, notification.Account.ID)
 		if err != nil {
@@ -678,9 +746,20 @@ func handleUpdate(c *mastodon.Client, status *mastodon.Status) {
 		return
 	}
 
+	userID := string(status.Account.ID)
+
 	for _, attachment := range status.MediaAttachments {
 		if attachment.Type == "image" || ((attachment.Type == "video" || attachment.Type == "gifv" || attachment.Type == "audio") && videoAudioProcessingCapability) {
 			if attachment.Description == "" {
+
+				if !HasUserConsent(userID) {
+					// Send a GDPR consent request
+					_, err := RequestGDPRConsent(c, userID, status.Account.Acct, status.Language, status.ID)
+					if err != nil {
+						log.Printf("Error requesting GDPR consent: %v", err)
+					}
+					return
+				}
 				generateAndPostAltText(c, status, status.ID)
 				break
 			} else {
@@ -705,6 +784,10 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 	var responses []string
 	altTextGenerated := false
 	altTextAlreadyExists := false
+
+	// Track total processing time for power calculation
+	var totalProcessingTimeMs int64
+	var isLocalModel bool = config.LLM.Provider != "gemini"
 
 	for _, attachment := range status.MediaAttachments {
 		wg.Add(1)
@@ -758,9 +841,11 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 
 			mu.Lock()
 			responses = append(responses, altText)
+			totalProcessingTimeMs += elapsed
 			mu.Unlock()
 			altTextGenerated = true
 
+			// Log metrics for successful generation
 			metricsManager.logSuccessfulGeneration(string(replyPost.Account.ID), attachment.Type, elapsed, replyPost.Language)
 		}(attachment)
 	}
@@ -779,7 +864,27 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 	// Add mention to the original poster at the start
 	combinedResponse = fmt.Sprintf("@%s %s", replyPost.Account.Acct, combinedResponse)
 
+	// Add provider attribution
 	combinedResponse = fmt.Sprintf("%s\n\n%s", combinedResponse, getProviderAttribution(config, replyPost.Language))
+
+	// Add power consumption information at the end if enabled and using a local model
+	if config.PowerMetrics.Enabled && isLocalModel && altTextGenerated {
+		powerConsumption := calculatePowerConsumption(totalProcessingTimeMs, config.PowerMetrics.GPUWatts)
+
+		if config.PowerMetrics.ShowComparison && config.PowerMetrics.CloudKWhPerRequest > 0 {
+			// Calculate cloud power for the same number of images
+			imageCount := len(responses)
+			cloudConsumption := config.PowerMetrics.CloudKWhPerRequest * float64(imageCount)
+			savingsPercent := (cloudConsumption - powerConsumption) / cloudConsumption * 100
+
+			powerInfo := fmt.Sprintf("\n\n🌱 Energy used: %.8f kWh (%.1f%% less than cloud AI)",
+				powerConsumption, savingsPercent)
+			combinedResponse += powerInfo
+		} else {
+			powerInfo := fmt.Sprintf("\n\n🌱 Energy used: %.8f kWh", powerConsumption)
+			combinedResponse += powerInfo
+		}
+	}
 
 	// Post the combined response
 	if combinedResponse != "" {
