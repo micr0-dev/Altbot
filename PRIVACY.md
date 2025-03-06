@@ -11,7 +11,7 @@ AltBot collects and processes the following data:
 - **User identifiers**: Your Fediverse account ID (required to identify when you've provided consent)
 - **Consent records**: When and how you provided consent for data processing
 - **Request metadata**: Timestamps, processing times, language preferences, and media types
-- **Rate limiting data**: To prevent abuse of the service
+- **Rate limiting data**: Such as account creation date and altbot use frequency. To prevent abuse of the service
 
 ## What data we DO NOT collect
 
