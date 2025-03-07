@@ -1,7 +1,7 @@
 {
     "en": {
         "prompts": {
-            "generateAltText": "Generate an alt-text description, which is a description for people who can't see the image. Be sure to say the actual exact contents of it not just talk about it. Be detailed but don't go too in-depth, just write about the main subjects in English: ",
+            "generateAltText": "Generate an alt-text description, which is a description for people who can't see the image. Be sure to talk about the actual contents of it, do not interpret anything. Start with a general description, then focus on details. Do it in two steps and show those steps as one text: ",
             "generateVideoAltText": "Generate an alt-text description, which is a description for people who can't hear or see this video. Be sure to say the actual exact contents of the video not just talk about it. Include both details about the audio and video. If something is said, transcribe it word for word. Be detailed but don't go too in-depth, just write about the main subjects in English: ",
             "generateAudioAltText": "Generate an alt-text description, which is a description for people who can't hear this audio. Be sure to say the actual exact contents of the audio not just talk about it. If something is said, transcribe it word for word. Be detailed but don't go too in-depth, just write about the main subjects in English: "
         },

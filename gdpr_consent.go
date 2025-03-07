@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -162,7 +163,7 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 	}
 
 	// Convert to lowercase and check for affirmative responses
-	responseText := plainTextContent
+	responseText := strings.ToLower(plainTextContent)
 	consent := false
 
 	// Check for various affirmative responses
@@ -173,7 +174,7 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 			break
 		}
 	}
-	log.Printf("consent: %v", consent)
+
 	log.Printf("User %s responded to consent request with: %s", status.Account.Acct, plainTextContent)
 
 	if consent {
