@@ -1,4 +1,4 @@
-module AltBot
+module Altbot
 
 go 1.23.0
 

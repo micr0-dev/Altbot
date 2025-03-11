@@ -151,7 +151,7 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 	}
 
 	// Check if the parent status is a consent request
-	if !containsWord(stripHTMLTags(parentStatus.Content), "https://github.com/micr0-dev/AltBot/blob/main/PRIVACY.md") {
+	if !containsWord(stripHTMLTags(parentStatus.Content), "https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md") {
 		return false
 	}
 

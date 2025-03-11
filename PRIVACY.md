@@ -1,12 +1,12 @@
-# AltBot Privacy Policy
+# Altbot Privacy Policy
 
 ## Introduction
 
-AltBot is a bot designed to generate alternative text descriptions (alt-text) for images on the Fediverse to improve accessibility. This privacy policy outlines how AltBot collects, uses, and protects your data in compliance with the General Data Protection Regulation (GDPR).
+Altbot is a bot designed to generate alternative text descriptions (alt-text) for images on the Fediverse to improve accessibility. This privacy policy outlines how Altbot collects, uses, and protects your data in compliance with the General Data Protection Regulation (GDPR).
 
 ## What data we collect
 
-AltBot collects and processes the following data:
+Altbot collects and processes the following data:
 
 - **User identifiers**: Your Fediverse account ID (required to identify when you've provided consent)
 - **Consent records**: When and how you provided consent for data processing
@@ -15,7 +15,7 @@ AltBot collects and processes the following data:
 
 ## What data we DO NOT collect
 
-AltBot explicitly does not store:
+Altbot explicitly does not store:
 
 - Image content or image data - these are processed temporarily and immediately deleted
 - Content of your posts (text) beyond what's required to process your request
@@ -52,7 +52,7 @@ To exercise these rights, please contact the altbot administrator.
 ## How to provide or revoke consent
 
 - **Providing consent**: Reply with "Yes" or "I agree" when prompted
-- **Revoking consent**: Block the AltBot account
+- **Revoking consent**: Block the Altbot account
 
 ## Changes to this policy
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"AltBot/dashboard"
+	"Altbot/dashboard"
 	"bufio"
 	"bytes"
 	"context"
@@ -161,7 +161,7 @@ var metricsManager *MetricsManager
 var llmProvider LLMProvider
 
 const (
-	sourceURL = "https://github.com/micr0-dev/AltBot"
+	sourceURL = "https://github.com/micr0-dev/Altbot"
 	donateURL = "https://ko-fi.com/micr0byte"
 	creator   = "@micr0@fuzzies.wtf"
 )
@@ -246,7 +246,7 @@ func main() {
 
 	// Print the version and art
 	fmt.Printf("%s%s%s%s%s\n", Cyan, AsciiArt, Pink, Motto, Reset)
-	fmt.Printf("%sAltBot%s v%s (%s)\n", Cyan, Reset, Version, config.LLM.Provider)
+	fmt.Printf("%sAltbot%s v%s (%s)\n", Cyan, Reset, Version, config.LLM.Provider)
 	checkForUpdates()
 
 	var cancel context.CancelFunc
@@ -1311,7 +1311,7 @@ func handleDeleteEvent(c *mastodon.Client, originalID mastodon.ID) {
 	defer mapMutex.Unlock()
 
 	if replyInfo, exists := replyMap[originalID]; exists {
-		// Delete AltBot's reply
+		// Delete Altbot's reply
 		err := c.DeleteStatus(ctx, replyInfo.ReplyID)
 		if err != nil {
 			log.Printf("Error deleting reply: %v", err)
@@ -1664,16 +1664,16 @@ func checkForUpdates() {
 
 	// Print appropriate message based on comparison
 	if comparison < 0 {
-		fmt.Printf("New version %s available! Visit: https://github.com/micr0-dev/AltBot/releases\n", latestVersion)
+		fmt.Printf("New version %s available! Visit: https://github.com/micr0-dev/Altbot/releases\n", latestVersion)
 	} else if comparison == 0 {
-		fmt.Println("AltBot is up-to-date.")
+		fmt.Println("Altbot is up-to-date.")
 	} else {
 		fmt.Println("Wowie~ ur using a newer version than the latest release! UwU u must be a developer or something!~")
 	}
 }
 
 func fetchLatestVersion() string {
-	resp, err := http.Get("https://api.github.com/repos/micr0-dev/AltBot/releases/latest")
+	resp, err := http.Get("https://api.github.com/repos/micr0-dev/Altbot/releases/latest")
 	if err != nil {
 		log.Printf("Error fetching latest version: %v", err)
 		return ""

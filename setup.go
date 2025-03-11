@@ -13,7 +13,7 @@ import (
 // RunSetupWizard guides the user through setup and writes config to a file
 // RunSetupWizard guides the user through setup and writes config to a file
 func runSetupWizard(filePath string) {
-	fmt.Println(Cyan + "Welcome to the AltBot Setup Wizard!" + Reset)
+	fmt.Println(Cyan + "Welcome to the Altbot Setup Wizard!" + Reset)
 
 	// Load the default config
 	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
@@ -66,22 +66,22 @@ func runSetupWizard(filePath string) {
 	config.Metrics.Enabled = promptBool(Cyan+"Enable Metrics (true/false)?"+Reset, fmt.Sprintf("%t", config.Metrics.Enabled))
 	config.Metrics.DashboardEnabled = promptBool(Blue+"Enable Metrics Dashboard (true/false)?"+Reset, fmt.Sprintf("%t", config.Metrics.DashboardEnabled))
 	config.AltTextReminders.Enabled = promptBool(Cyan+"Enable Alt-Text Reminders (true/false)?"+Reset, fmt.Sprintf("%t", config.AltTextReminders.Enabled))
-	
+
 	// Power metrics section (only relevant for local models)
 	if config.LLM.Provider == "ollama" || config.LLM.Provider == "transformers" {
 		fmt.Println(Green + "\nPower Metrics Settings:" + Reset)
 		fmt.Println("This feature shows the estimated electricity used for each alt-text generation.")
-		
+
 		config.PowerMetrics.Enabled = promptBool(Cyan+"Enable Power Consumption Metrics (true/false)?"+Reset, fmt.Sprintf("%t", config.PowerMetrics.Enabled))
-		
+
 		if config.PowerMetrics.Enabled {
 			// Convert the float to a string for the prompt
 			gpuWattsStr := fmt.Sprintf("%.1f", config.PowerMetrics.GPUWatts)
 			gpuWattsInput := promptString(Yellow+"GPU Power Consumption (watts):"+Reset, gpuWattsStr)
 			config.PowerMetrics.GPUWatts = parseFloat(gpuWattsInput, config.PowerMetrics.GPUWatts)
-			
+
 			config.PowerMetrics.ShowComparison = promptBool(Green+"Show Comparison to Cloud AI (true/false)?"+Reset, fmt.Sprintf("%t", config.PowerMetrics.ShowComparison))
-			
+
 			if config.PowerMetrics.ShowComparison {
 				cloudKWhStr := fmt.Sprintf("%.7f", config.PowerMetrics.CloudKWhPerRequest)
 				cloudKWhInput := promptString(Blue+"Estimated Cloud AI kWh per request:"+Reset, cloudKWhStr)
