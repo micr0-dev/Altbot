@@ -108,9 +108,9 @@ func RequestGDPRConsent(c *mastodon.Client, userID string, username string, lang
 	// Prepare the consent message with localization support
 	var message string
 	if isStandaloneMsg {
-		message = fmt.Sprintf("@%s %s\n\n%s", username, getLocalizedString("en", "gdprWelcomeMessage", "response"), getLocalizedString(consentLanguage, "gdprConsentRequest", "response"))
+		message = fmt.Sprintf("@%s %s\n\n%s", username, getLocalizedString(consentLanguage, "gdprWelcomeMessage", "response"), getLocalizedString(consentLanguage, "gdprConsentRequest", "response"))
 	} else {
-		message = fmt.Sprintf("@%s \n%s", username, getLocalizedString(consentLanguage, "gdprConsentRequest", "response"))
+		message = fmt.Sprintf("@%s %s", username, getLocalizedString(consentLanguage, "gdprConsentRequest", "response"))
 	}
 	// Post the consent request
 	status, err := c.PostStatus(ctx, &mastodon.Toot{
