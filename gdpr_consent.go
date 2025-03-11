@@ -100,14 +100,18 @@ func RemoveUserConsent(userID string) error {
 }
 
 // RequestGDPRConsent sends a consent request message to a user
-func RequestGDPRConsent(c *mastodon.Client, userID string, username string, language string, replyToID mastodon.ID) (mastodon.ID, error) {
+func RequestGDPRConsent(c *mastodon.Client, userID string, username string, language string, replyToID mastodon.ID, isStandaloneMsg bool) (mastodon.ID, error) {
 	// Always use English for GDPR messages for now, regardless of user language
 	// We'll use "en" as the language code for consistency
 	consentLanguage := "en"
 
 	// Prepare the consent message with localization support
-	message := fmt.Sprintf("@%s %s", username, getLocalizedString(consentLanguage, "gdprConsentRequest", "response"))
-
+	var message string
+	if isStandaloneMsg {
+		message = fmt.Sprintf("@%s %s\n\n%s", username, getLocalizedString("en", "gdprWelcomeMessage", "response"), getLocalizedString(consentLanguage, "gdprConsentRequest", "response"))
+	} else {
+		message = fmt.Sprintf("@%s \n%s", username, getLocalizedString(consentLanguage, "gdprConsentRequest", "response"))
+	}
 	// Post the consent request
 	status, err := c.PostStatus(ctx, &mastodon.Toot{
 		Status:      message,

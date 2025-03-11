@@ -566,24 +566,19 @@ func handleMention(c *mastodon.Client, notification *mastodon.Notification) {
 		return
 	}
 
-	// Check for GDPR consent first
-	userID := string(notification.Account.ID)
-
-	// If user hasn't provided GDPR consent, request it first
-	if !HasUserConsent(userID) {
-		log.Printf("User %s has not provided GDPR consent, requesting it", notification.Account.Acct)
-
-		_, err := RequestGDPRConsent(c, userID, notification.Account.Acct, notification.Status.Language, notification.Status.ID)
-		if err != nil {
-			log.Printf("Error requesting GDPR consent: %v", err)
-		}
-		return
-	}
-
-	// GDPR consent is provided, continue with legacy consent flow
-
 	// Check if the person who mentioned the bot is the OP
 	if status.Account.ID == notification.Account.ID {
+		userID := string(notification.Account.ID)
+		// If user hasn't provided GDPR consent, request it first
+		if !HasUserConsent(userID) {
+			log.Printf("User %s has not provided GDPR consent, requesting it", notification.Account.Acct)
+
+			_, err := RequestGDPRConsent(c, userID, notification.Account.Acct, notification.Status.Language, notification.Status.ID, false)
+			if err != nil {
+				log.Printf("Error requesting GDPR consent: %v", err)
+			}
+			return
+		}
 		generateAndPostAltText(c, status, notification.Status.ID)
 	} else if !config.Behavior.AskForConsent {
 		generateAndPostAltText(c, status, notification.Status.ID)
@@ -710,22 +705,12 @@ func handleFollow(c *mastodon.Client, notification *mastodon.Notification) {
 		// Send a welcome message with GDPR consent request
 		log.Printf("New follower %s, sending GDPR consent request", notification.Account.Acct)
 
-		messege := getLocalizedString("en", "gdprWelcomeMessage", "response") // Hardcoded to English cuz we don't have the user's language
-		toot := &mastodon.Toot{
-			Status:     fmt.Sprintf("@%s %s", notification.Account.Acct, messege),
-			Visibility: "direct",
+		// Now send the GDPR consent request as a reply to our welcome message
+		_, err := RequestGDPRConsent(c, userID, notification.Account.Acct, "en", mastodon.ID(""), true) // Hardcoded to English cuz we don't have the user's language
+		if err != nil {
+			log.Printf("Error requesting GDPR consent: %v", err)
 		}
 
-		status, err := c.PostStatus(ctx, toot)
-		if err != nil {
-			log.Printf("Error posting welcome message: %v", err)
-		} else {
-			// Now send the GDPR consent request as a reply to our welcome message
-			_, err := RequestGDPRConsent(c, userID, notification.Account.Acct, "en", status.ID) // Hardcoded to English cuz we don't have the user's language
-			if err != nil {
-				log.Printf("Error requesting GDPR consent: %v", err)
-			}
-		}
 	}
 
 	if config.Behavior.FollowBack {
@@ -754,7 +739,7 @@ func handleUpdate(c *mastodon.Client, status *mastodon.Status) {
 
 				if !HasUserConsent(userID) {
 					// Send a GDPR consent request
-					_, err := RequestGDPRConsent(c, userID, status.Account.Acct, status.Language, status.ID)
+					_, err := RequestGDPRConsent(c, userID, status.Account.Acct, status.Language, status.ID, false)
 					if err != nil {
 						log.Printf("Error requesting GDPR consent: %v", err)
 					}
