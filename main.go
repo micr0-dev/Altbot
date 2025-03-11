@@ -149,6 +149,7 @@ var config Config
 var model *genai.GenerativeModel
 var client *genai.Client
 var ctx context.Context
+var botAcct mastodon.Account
 
 var consentRequests = make(map[mastodon.ID]ConsentRequest)
 
@@ -283,7 +284,6 @@ func main() {
 		fmt.Printf("%s Video/Audio Processing: Unsupported by LLM\n", getStatusSymbol(false))
 	}
 
-	PromptOverrideState = config.LLM.PromptOverride != ""
 	PromptAdditionState = config.LLM.PromptAddition != ""
 
 	if PromptOverrideState {
@@ -477,6 +477,7 @@ func fetchAndVerifyBotAccountID(c *mastodon.Client) (mastodon.ID, error) {
 		return "", err
 	}
 	fmt.Printf("Bot Account ID: %s, Username: %s\n\n", acct.ID, acct.Acct)
+	botAcct = *acct
 	return acct.ID, nil
 }
 
@@ -1911,14 +1912,24 @@ func updateBotProfile(client *mastodon.Client, config Config) error {
 	// Prepare new fields based on config order
 	var fields []mastodon.Field
 
+	// Add a new config option to check if this is the official instance
+	var isOfficialInstance bool = botAcct.Acct == "altbot" && config.Server.MastodonServer == "https://fuzzies.wtf"
+
 	// Process fields in the order specified in config
 	for _, fieldName := range config.Profile.Fields {
 		switch fieldName {
 		case "version":
-			fields = append(fields, mastodon.Field{
-				Name:  "Version",
-				Value: fmt.Sprintf("v%s", Version),
-			})
+			if isOfficialInstance {
+				fields = append(fields, mastodon.Field{
+					Name:  "Version",
+					Value: fmt.Sprintf("v%s", Version),
+				})
+			} else {
+				fields = append(fields, mastodon.Field{
+					Name:  "Altbot Version",
+					Value: fmt.Sprintf("v%s", Version),
+				})
+			}
 
 		case "model":
 			if config.LLM.Provider == "transformers" {
@@ -1941,10 +1952,17 @@ func updateBotProfile(client *mastodon.Client, config Config) error {
 			}
 
 		case "source":
-			fields = append(fields, mastodon.Field{
-				Name:  "Source Code",
-				Value: sourceURL,
-			})
+			if isOfficialInstance {
+				fields = append(fields, mastodon.Field{
+					Name:  "Source Code",
+					Value: sourceURL,
+				})
+			} else {
+				fields = append(fields, mastodon.Field{
+					Name:  "Powered by Altbot",
+					Value: sourceURL,
+				})
+			}
 
 		case "donate":
 			fields = append(fields, mastodon.Field{
