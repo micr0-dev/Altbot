@@ -152,7 +152,6 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 
 	// Check if the parent status is a consent request
 	if !containsWord(stripHTMLTags(parentStatus.Content), "https://github.com/micr0-dev/AltBot/blob/main/PRIVACY.md") {
-		log.Println("Parent status is not a consent request")
 		return false
 	}
 
@@ -174,8 +173,6 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 			break
 		}
 	}
-
-	log.Printf("User %s responded to consent request with: %s", status.Account.Acct, plainTextContent)
 
 	if consent {
 		// Record the user's consent
