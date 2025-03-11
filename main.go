@@ -40,10 +40,10 @@ import (
 const Version = "2.0"
 
 // AsciiArt is the ASCII art for the bot
-const AsciiArt = `    _   _ _   ___     _   
-   /_\ | | |_| _ )___| |_ 
-  / _ \| |  _| _ / _ |  _|
- /_/ \_|_|\__|___\___/\__| `
+const AsciiArt = `    _   _ _   _        _   
+   /_\ | | |_| |__ ___| |_ 
+  / _ \| |  _| '_ / _ \  _|
+ /_/ \_\_|\__|_.__\___/\__|`
 const Motto = "アクセシビリティロボット"
 
 type Config struct {
