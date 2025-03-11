@@ -363,12 +363,13 @@ func main() {
 		}
 	}()
 
+	fmt.Printf("%s GDPR Consent System: ", getStatusSymbol(true))
+
 	// Initialize GDPR consent database
 	if err := InitializeConsentDatabase(); err != nil {
 		log.Fatalf("Error initializing GDPR consent database: %v", err)
 	}
 
-	fmt.Printf("%s GDPR Consent System: %s\n", getStatusSymbol(true), "Enabled")
 	fmt.Printf("%s Legacy Consent System: %v\n", getStatusSymbol(config.Behavior.AskForConsent), config.Behavior.AskForConsent)
 
 	// Start metrics manager

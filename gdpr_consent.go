@@ -34,12 +34,12 @@ func InitializeConsentDatabase() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// File doesn't exist, that's okay - we'll create it when we save
-			log.Println("No existing consent database found. Creating a new one.")
+			fmt.Println("No consent database found. Creating a new one.")
 			return saveConsentDatabase("consent_database.json")
 		}
 		return err
 	}
-	log.Printf("Consent database loaded with %d users", len(consentDB.Users))
+	fmt.Printf("Database loaded with %d users\n", len(consentDB.Users))
 	return nil
 }
 
