@@ -126,11 +126,11 @@ func (mm *MetricsManager) logFollow(userID string) {
 	mm.logEvent(userID, "follow", nil)
 }
 
-// calculatePowerConsumption calculates the power consumption in kWh based on processing time and GPU watts
+// calculatePowerConsumption calculates the power consumption in Wh based on processing time and GPU watts
 func calculatePowerConsumption(processingTimeMs int64, gpuWatts float64) float64 {
-	// Formula: kWh = (watts × processing_time_ms) ÷ (1000 × 3600 × 1000)
-	// Convert milliseconds to hours and multiply by watts, then convert to kWh
-	return (gpuWatts * float64(processingTimeMs)) / (1000 * 3600 * 1000)
+	// Formula: Wh = (watts × processing_time_ms) ÷ (1000 × 3600)
+	// Convert milliseconds to hours and multiply by watts
+	return (gpuWatts * float64(processingTimeMs)) / (1000 * 3600)
 }
 
 // logSuccessfulGeneration logs a successful alt-text generation
@@ -140,12 +140,12 @@ func (mm *MetricsManager) logSuccessfulGeneration(userID, mediaType string, resp
 		"responseTime": responseTimeMillis,
 		"lang":         lang,
 	}
-	
+
 	// Add power consumption metrics if enabled and using a local model
 	if config.PowerMetrics.Enabled && config.LLM.Provider != "gemini" {
 		powerConsumption := calculatePowerConsumption(responseTimeMillis, config.PowerMetrics.GPUWatts)
 		details["powerConsumptionKWh"] = powerConsumption
-		
+
 		// Add comparison data if enabled
 		if config.PowerMetrics.ShowComparison && config.PowerMetrics.CloudKWhPerRequest > 0 {
 			cloudConsumption := config.PowerMetrics.CloudKWhPerRequest
@@ -154,7 +154,7 @@ func (mm *MetricsManager) logSuccessfulGeneration(userID, mediaType string, resp
 			details["powerSavingsPercent"] = savingsPercent
 		}
 	}
-	
+
 	mm.logEvent(userID, "successful_generation", details)
 }
 

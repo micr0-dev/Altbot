@@ -877,11 +877,11 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 			cloudConsumption := config.PowerMetrics.CloudKWhPerRequest * float64(imageCount)
 			savingsPercent := (cloudConsumption - powerConsumption) / cloudConsumption * 100
 
-			powerInfo := fmt.Sprintf("\n\n🌱 Energy used: %.8f kWh (%.1f%% less than cloud AI)",
+			powerInfo := fmt.Sprintf("\n\n🌱 Energy used: %.3f Wh (%.1f%% less than cloud AI)",
 				powerConsumption, savingsPercent)
 			combinedResponse += powerInfo
 		} else {
-			powerInfo := fmt.Sprintf("\n\n🌱 Energy used: %.8f kWh", powerConsumption)
+			powerInfo := fmt.Sprintf("\n\n🌱 Energy used: %.3f Wh", powerConsumption)
 			combinedResponse += powerInfo
 		}
 	}
