@@ -929,10 +929,12 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 			queuePostForAltTextCheck(status, string(replyPost.Account.ID))
 		}
 
-		// Track the reply with a timestamp
-		mapMutex.Lock()
-		replyMap[status.ID] = ReplyInfo{ReplyID: reply.ID, Timestamp: time.Now()}
-		mapMutex.Unlock()
+		if reply != nil {
+			// Track the reply with a timestamp
+			mapMutex.Lock()
+			replyMap[status.ID] = ReplyInfo{ReplyID: reply.ID, Timestamp: time.Now()}
+			mapMutex.Unlock()
+		}
 	}
 }
 
