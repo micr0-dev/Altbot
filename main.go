@@ -923,6 +923,14 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 
 		if err != nil {
 			log.Printf("Error posting reply: %v", err)
+			_, err = c.PostStatus(ctx, &mastodon.Toot{
+				Status:      getLocalizedString(replyPost.Language, "replyError", "response"),
+				InReplyToID: replyToID,
+				Visibility:  visibility,
+			})
+			if err != nil {
+				log.Printf("What the fuck happened here....")
+			}
 		}
 
 		if config.AltTextReminders.Enabled && visibility != "direct" {
