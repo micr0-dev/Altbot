@@ -145,14 +145,6 @@ func (mm *MetricsManager) logSuccessfulGeneration(userID, mediaType string, resp
 	if config.PowerMetrics.Enabled && config.LLM.Provider != "gemini" {
 		powerConsumption := calculatePowerConsumption(responseTimeMillis, config.PowerMetrics.GPUWatts)
 		details["powerConsumptionKWh"] = powerConsumption
-
-		// Add comparison data if enabled
-		if config.PowerMetrics.ShowComparison && config.PowerMetrics.CloudKWhPerRequest > 0 {
-			cloudConsumption := config.PowerMetrics.CloudKWhPerRequest
-			savingsPercent := (cloudConsumption - powerConsumption) / cloudConsumption * 100
-			details["cloudPowerConsumptionKWh"] = cloudConsumption
-			details["powerSavingsPercent"] = savingsPercent
-		}
 	}
 
 	mm.logEvent(userID, "successful_generation", details)

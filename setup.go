@@ -79,14 +79,6 @@ func runSetupWizard(filePath string) {
 			gpuWattsStr := fmt.Sprintf("%.1f", config.PowerMetrics.GPUWatts)
 			gpuWattsInput := promptString(Yellow+"GPU Power Consumption (watts):"+Reset, gpuWattsStr)
 			config.PowerMetrics.GPUWatts = parseFloat(gpuWattsInput, config.PowerMetrics.GPUWatts)
-
-			config.PowerMetrics.ShowComparison = promptBool(Green+"Show Comparison to Cloud AI (true/false)?"+Reset, fmt.Sprintf("%t", config.PowerMetrics.ShowComparison))
-
-			if config.PowerMetrics.ShowComparison {
-				cloudKWhStr := fmt.Sprintf("%.7f", config.PowerMetrics.CloudKWhPerRequest)
-				cloudKWhInput := promptString(Blue+"Estimated Cloud AI kWh per request:"+Reset, cloudKWhStr)
-				config.PowerMetrics.CloudKWhPerRequest = parseFloat(cloudKWhInput, config.PowerMetrics.CloudKWhPerRequest)
-			}
 		}
 	}
 

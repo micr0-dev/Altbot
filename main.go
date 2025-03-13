@@ -106,10 +106,8 @@ type Config struct {
 		DashboardPort    int  `toml:"dashboard_port"`
 	} `toml:"metrics"`
 	PowerMetrics struct {
-		Enabled            bool    `toml:"enabled"`
-		GPUWatts           float64 `toml:"gpu_watts"`
-		ShowComparison     bool    `toml:"show_comparison"`
-		CloudKWhPerRequest float64 `toml:"cloud_kwh_per_request"`
+		Enabled  bool    `toml:"enabled"`
+		GPUWatts float64 `toml:"gpu_watts"`
 	} `toml:"power_metrics"`
 	RateLimit struct {
 		Enabled                        bool   `toml:"enabled"`
@@ -389,11 +387,6 @@ func main() {
 	if config.LLM.Provider != "gemini" {
 		powerMetricsStatus := fmt.Sprintf("%v (%.1f watts)", config.PowerMetrics.Enabled, config.PowerMetrics.GPUWatts)
 		fmt.Printf("%s Power Consumption Metrics: %s\n", getStatusSymbol(config.PowerMetrics.Enabled), powerMetricsStatus)
-
-		if config.PowerMetrics.Enabled && config.PowerMetrics.ShowComparison {
-			fmt.Printf("%s Cloud AI Comparison: Enabled (%.7f kWh/request)\n",
-				getStatusSymbol(true), config.PowerMetrics.CloudKWhPerRequest)
-		}
 	}
 
 	fmt.Println("\n-----------------------------------")
@@ -852,25 +845,15 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 	combinedResponse = fmt.Sprintf("@%s %s", replyPost.Account.Acct, combinedResponse)
 
 	// Add provider attribution
-	combinedResponse = fmt.Sprintf("%s\n\n%s", combinedResponse, getProviderAttribution(config, replyPost.Language))
+	if altTextGenerated {
+		combinedResponse = fmt.Sprintf("%s\n\n%s", combinedResponse, getProviderAttribution(config, replyPost.Language))
+	}
 
 	// Add power consumption information at the end if enabled and using a local model
 	if config.PowerMetrics.Enabled && isLocalModel && altTextGenerated {
 		powerConsumption := calculatePowerConsumption(totalProcessingTimeMs, config.PowerMetrics.GPUWatts)
-
-		if config.PowerMetrics.ShowComparison && config.PowerMetrics.CloudKWhPerRequest > 0 {
-			// Calculate cloud power for the same number of images
-			imageCount := len(responses)
-			cloudConsumption := config.PowerMetrics.CloudKWhPerRequest * float64(imageCount)
-			savingsPercent := (cloudConsumption - powerConsumption) / cloudConsumption * 100
-
-			powerInfo := fmt.Sprintf("\n\n🌱 Energy used: %.3f Wh (%.1f%% less than cloud AI)",
-				powerConsumption, savingsPercent)
-			combinedResponse += powerInfo
-		} else {
-			powerInfo := fmt.Sprintf("\n\n🌱 Energy used: %.3f Wh", powerConsumption)
-			combinedResponse += powerInfo
-		}
+		powerInfo := fmt.Sprintf("\n\n"+getLocalizedString(replyPost.Language, "energyUsageMessage", "response"), powerConsumption)
+		combinedResponse += powerInfo
 	}
 
 	// Post the combined response
