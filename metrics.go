@@ -126,6 +126,13 @@ func (mm *MetricsManager) logFollow(userID string) {
 	mm.logEvent(userID, "follow", nil)
 }
 
+// calculatePowerConsumption calculates the power consumption in Wh based on processing time and GPU watts
+func calculatePowerConsumption(processingTimeMs int64, gpuWatts float64) float64 {
+	// Formula: Wh = (watts × processing_time_ms) ÷ (1000 × 3600)
+	// Convert milliseconds to hours and multiply by watts
+	return (gpuWatts * float64(processingTimeMs)) / (1000 * 3600)
+}
+
 // logSuccessfulGeneration logs a successful alt-text generation
 func (mm *MetricsManager) logSuccessfulGeneration(userID, mediaType string, responseTimeMillis int64, lang string) {
 	details := map[string]interface{}{
@@ -133,6 +140,13 @@ func (mm *MetricsManager) logSuccessfulGeneration(userID, mediaType string, resp
 		"responseTime": responseTimeMillis,
 		"lang":         lang,
 	}
+
+	// Add power consumption metrics if enabled and using a local model
+	if config.PowerMetrics.Enabled && config.LLM.Provider != "gemini" {
+		powerConsumption := calculatePowerConsumption(responseTimeMillis, config.PowerMetrics.GPUWatts)
+		details["powerConsumptionKWh"] = powerConsumption
+	}
+
 	mm.logEvent(userID, "successful_generation", details)
 }
 

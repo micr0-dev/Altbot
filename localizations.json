@@ -1,18 +1,22 @@
 {
     "en": {
         "prompts": {
-            "generateAltText": "Generate an alt-text description, which is a description for people who can't see the image. Be sure to say the actual exact contents of it not just talk about it. Be detailed but don't go too in-depth, just write about the main subjects in English: ",
+            "generateAltText": "Generate an alt-text description, which is a description for people who can't see the image. Be sure to talk about the actual contents of it, do not interpret anything. Start with a general description, then focus on details. Do it in two steps and show those steps as one text: ",
             "generateVideoAltText": "Generate an alt-text description, which is a description for people who can't hear or see this video. Be sure to say the actual exact contents of the video not just talk about it. Include both details about the audio and video. If something is said, transcribe it word for word. Be detailed but don't go too in-depth, just write about the main subjects in English: ",
             "generateAudioAltText": "Generate an alt-text description, which is a description for people who can't hear this audio. Be sure to say the actual exact contents of the audio not just talk about it. If something is said, transcribe it word for word. Be detailed but don't go too in-depth, just write about the main subjects in English: "
         },
         "responses": {
             "altTextError": "Sorry, I couldn't process this image.",
-            "consentRequest": "This bot has been asked to generate an alt text for your image by @%s. If you consent, your media will be uploaded to Google Gemini and might be used for training purposes. More information in my bio. \nDo you consent? Reply with 'Y' or 'Yes' to proceed.",
+            "consentRequest": "This bot has been asked to generate an alt text for your image by @%s. If you consent, you will grant altbot a one-time permission to process this specific post. All processing is done privately with no third-parties. Any and all content is deleted after processing. \nThe full privacy policy: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\nDo you consent? Reply with 'Y' or 'Yes' to proceed.",
+            "gdprConsentRequest": "I need your explicit consent to process your requests. As part of GDPR compliance:\n\n✅ I collect: Request timestamps, processing times, and language preferences\n❌ I don't store: Images, personal information, or content of your posts\n\nTo provide consent, please reply \"Yes\" or \"I agree\"\nTo revoke consent at any time, simply block this account.\n\nOur full privacy policy: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md",
+            "gdprConsentConfirmation": "Thank you! Your consent has been recorded. I'll now process your requests in accordance with our privacy policy. You can revoke consent at any time by blocking this account.",
+            "gdprWelcomeMessage": "Welcome! I'm here to generate alt-text for your images to improve accessibility. Before we continue:",
             "imageAlreadyHasAltText": "This image already has alt-text",
             "unsupportedFile": "This file is unsupported, only images, videos, and audio files are currently supported",
             "providedByMessage": "Provided by @%s, generated using %s",
             "providedByMessageLocal": "Provided by @%s, generated privately and locally using %s",
-            "altTextReminder": "Hi @%s, please add alt-text to your images by editing your post. Alt-text in the comments isn't easily accessible to screenreaders! Thank you!"
+            "altTextReminder": "Hi @%s, please add alt-text to your images by editing your post. Alt-text in the comments isn't easily accessible to screenreaders! Thank you!",
+            "energyUsageMessage": "🌱 Energy used: %.3f Wh"
         }
     },
     "ru": {
@@ -28,7 +32,8 @@
             "unsupportedFile": "Этот файл не поддерживается, в это время поддерживаются только изображения, видео и аудио",
             "providedByMessage": "Предоставлено @%s, сгенерировано с использованием %s",
             "providedByMessageLocal": "Предоставлено @%s, сгенерировано локально и приватно с использованием %s",
-            "altTextReminder": "Привет, @%s, пожалуйста, добавьте текстовые описания к своим изображениям, отредактировав свой пост. Текстовые описания в комментариях недоступны для скринридеров! Спасибо!"
+            "altTextReminder": "Привет, @%s, пожалуйста, добавьте текстовые описания к своим изображениям, отредактировав свой пост. Текстовые описания в комментариях недоступны для скринридеров! Спасибо!",
+            "energyUsageMessage": "🌱 Использовано энергии: %.3f Wh"
         }
     },
     "be": {
@@ -44,7 +49,8 @@
             "unsupportedFile": "Гэты файл не падтрымліваецца, у цяперашні час падтрымліваюцца толькі выявы, відэа і аўдыё",
             "providedByMessage": "Прадастаўлена @%s, створана з выкарыстаннем %s",
             "providedByMessageLocal": "Прадастаўлена @%s, створана лакальна і прыватна з выкарыстаннем %s",
-            "altTextReminder": "Прывітанне, @%s, калі ласка, дадайце тэкставыя апісанні да вашых малюнкаў, адрэдагаваўшы свой пост. Тэксты ў каментарыях складана даступныя экранным чытальнікам! Дзякуй!"
+            "altTextReminder": "Прывітанне, @%s, калі ласка, дадайце тэкставыя апісанні да вашых малюнкаў, адрэдагаваўшы свой пост. Тэксты ў каментарыях складана даступныя экранным чытальнікам! Дзякуй!",
+            "energyUsageMessage": "🌱 Выкарыстана энергіі: %.3f Wh"
         }
     },
     "es": {
@@ -60,7 +66,8 @@
             "unsupportedFile": "Este archivo no es compatible, actualmente solo se admiten imágenes, videos y archivos de audio",
             "providedByMessage": "Proporcionado por @%s, generado usando %s",
             "providedByMessageLocal": "Proporcionado por @%s, generado de forma privada y local usando %s",
-            "altTextReminder": "Hola @%s, por favor añade texto alternativo a tus imágenes editando tu publicación. ¡El texto alternativo en los comentarios no es fácilmente accesible para lectores de pantalla! ¡Gracias!"
+            "altTextReminder": "Hola @%s, por favor añade texto alternativo a tus imágenes editando tu publicación. ¡El texto alternativo en los comentarios no es fácilmente accesible para lectores de pantalla! ¡Gracias!",
+            "energyUsageMessage": "🌱 Energía utilizada: %.3f Wh"
         }
     },
     "fr": {
@@ -76,7 +83,8 @@
             "unsupportedFile": "Ce fichier n'est pas pris en charge, actuellement seules les images, vidéos et fichiers audio sont pris en charge",
             "providedByMessage": "Fourni par @%s, généré en utilisant %s",
             "providedByMessageLocal": "Fourni par @%s, généré localement et en privé en utilisant %s",
-            "altTextReminder": "Bonjour @%s, veuillez ajouter du texte alternatif à vos images en modifiant votre publication. Le texte alternatif dans les commentaires n'est pas facilement accessible aux lecteurs d'écran ! Merci !"
+            "altTextReminder": "Bonjour @%s, veuillez ajouter du texte alternatif à vos images en modifiant votre publication. Le texte alternatif dans les commentaires n'est pas facilement accessible aux lecteurs d'écran ! Merci !",
+            "energyUsageMessage": "🌱 Énergie utilisée : %.3f Wh"
         }
     },
     "de": {
@@ -91,8 +99,9 @@
             "imageAlreadyHasAltText": "Dieses Bild hat bereits einen Alt-Text",
             "unsupportedFile": "Diese Datei wird nicht unterstützt, derzeit werden nur Bilder, Videos und Audiodateien unterstützt",
             "providedByMessage": "Bereitgestellt von @%s, generiert mit %s",
-                    "providedByMessageLocal": "Bereitgestellt von @%s, privat und lokal generiert mit %s",
-            "altTextReminder": "Hallo @%s, bitte füge Alt-Text zu deinen Bildern hinzu, indem du deinen Beitrag bearbeitest. Alt-Text in den Kommentaren ist für Screenreader nur schwer zugänglich! Danke!"
+            "providedByMessageLocal": "Bereitgestellt von @%s, privat und lokal generiert mit %s",
+            "altTextReminder": "Hallo @%s, bitte füge Alt-Text zu deinen Bildern hinzu, indem du deinen Beitrag bearbeitest. Alt-Text in den Kommentaren ist für Screenreader nur schwer zugänglich! Danke!",
+            "energyUsageMessage": "🌱 Energieverbrauch: %.3f Wh"
         }
     },
     "it": {
@@ -108,7 +117,8 @@
             "unsupportedFile": "Questo file non è supportato, attualmente sono supportati solo immagini, video e file audio",
             "providedByMessage": "Fornito da @%s, generato utilizzando %s",
             "providedByMessageLocal": "Fornito da @%s, generato localmente e privatamente utilizzando %s",
-            "altTextReminder": "Ciao @%s, per favore aggiungi testo alternativo alle tue immagini modificando il tuo post. Il testo alternativo nei commenti non è facilmente accessibile dai lettori di schermo! Grazie!"
+            "altTextReminder": "Ciao @%s, per favore aggiungi testo alternativo alle tue immagini modificando il tuo post. Il testo alternativo nei commenti non è facilmente accessibile dai lettori di schermo! Grazie!",
+            "energyUsageMessage": "🌱 Energia utilizzata: %.3f Wh"
         }
     },
     "ja": {
@@ -124,7 +134,8 @@
             "unsupportedFile": "このファイルはサポートされていません。現在、サポートされているのは画像、ビデオ、およびオーディオファイルのみです",
             "providedByMessage": "@%s によって提供され、%s を使用して生成されました",
             "providedByMessageLocal": "@%s によって提供され、%s を使用してローカルでプライベートに生成されました",
-            "altTextReminder": "こんにちは @%s、投稿を編集して画像に代替テキストを追加してください。コメント内の代替テキストはスクリーンリーダーでは簡単にアクセスできません！ありがとうございます！"
+            "altTextReminder": "こんにちは @%s、投稿を編集して画像に代替テキストを追加してください。コメント内の代替テキストはスクリーンリーダーでは簡単にアクセスできません！ありがとうございます！",
+            "energyUsageMessage": "🌱 エネルギー使用量: %.3f Wh"
         }
     },
     "zh": {
@@ -140,7 +151,8 @@
             "unsupportedFile": "此文件不受支持，目前仅支持图像、视频和音频文件",
             "providedByMessage": "由 @%s 提供，使用 %s 生成",
             "providedByMessageLocal": "由 @%s 提供，使用 %s 在本地私密生成",
-            "altTextReminder": "您好，@%s，请通过编辑帖子为您的图片添加替代文本。评论中的替代文本对屏幕阅读器不易访问！谢谢！"
+            "altTextReminder": "您好，@%s，请通过编辑帖子为您的图片添加替代文本。评论中的替代文本对屏幕阅读器不易访问！谢谢！",
+            "energyUsageMessage": "🌱 能源消耗：%.3f 瓦时"
         }
     },
     "pt": {
@@ -156,7 +168,8 @@
             "unsupportedFile": "Este arquivo não é suportado, atualmente apenas imagens, vídeos e arquivos de áudio são suportados",
             "providedByMessage": "Fornecido por @%s, gerado usando %s",
             "providedByMessageLocal": "Fornecido por @%s, gerado localmente e de forma privada usando %s",
-            "altTextReminder": "Olá @%s, por favor adicione texto alternativo às suas imagens editando sua postagem. O texto alternativo nos comentários não é facilmente acessível para leitores de tela! Obrigado!"
+            "altTextReminder": "Olá @%s, por favor adicione texto alternativo às suas imagens editando sua postagem. O texto alternativo nos comentários não é facilmente acessível para leitores de tela! Obrigado!",
+            "energyUsageMessage": "🌱 Energia utilizada: %.3f Wh"
         }
     },
     "ko": {
@@ -172,7 +185,8 @@
             "unsupportedFile": "이 파일은 지원되지 않습니다. 현재 이미지, 비디오 및 오디오 파일만 지원됩니다",
             "providedByMessage": "@%s 에 의해 제공되었으며 %s 를 사용하여 생성되었습니다",
             "providedByMessageLocal": "@%s 에 의해 제공되었으며 %s 를 사용하여 로컬에서 비공개로 생성되었습니다",
-            "altTextReminder": "안녕하세요 @%s, 게시물을 편집하여 이미지에 대체 텍스트를 추가해 주세요. 댓글에 있는 대체 텍스트는 화면 판독기에 쉽게 접근할 수 없습니다! 감사합니다!"
+            "altTextReminder": "안녕하세요 @%s, 게시물을 편집하여 이미지에 대체 텍스트를 추가해 주세요. 댓글에 있는 대체 텍스트는 화면 판독기에 쉽게 접근할 수 없습니다! 감사합니다!",
+            "energyUsageMessage": "🌱 에너지 사용량: %.3f Wh"
         }
     }
 }
