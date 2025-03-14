@@ -1,4 +1,3 @@
-// llm_provider.go
 package main
 
 import (
@@ -38,9 +37,12 @@ type OllamaProvider struct {
 
 // TransformersProvider implements LLMProvider for Hugging Face Transformers
 type TransformersProvider struct {
-	ServerURL string
-	Model     string
-	Config    *Config
+	ServerURL     string
+	Model         string
+	Config        *Config
+	serverProcess *os.Process
+	monitoring    bool
+	stopMonitor   chan bool
 }
 
 // NewLLMProvider creates a new LLM provider based on the configuration
@@ -260,16 +262,39 @@ func (p *OllamaProvider) Close() error {
 }
 
 func (p *TransformersProvider) Close() error {
-	return nil // Server is managed separately
+	if p.monitoring {
+		p.stopMonitor <- true
+		p.monitoring = false
+	}
+
+	if p.serverProcess != nil {
+		p.serverProcess.Kill()
+		p.serverProcess = nil
+	}
+	return nil
 }
 
 func setupTransformersProvider(config Config) (*TransformersProvider, error) {
 	serverURL := fmt.Sprintf("http://localhost:%d", config.TransformersServerArgs.Port)
-	return &TransformersProvider{
-		Model:     config.TransformersServerArgs.Model,
-		ServerURL: serverURL,
-		Config:    &config,
-	}, nil
+	provider := &TransformersProvider{
+		Model:       config.TransformersServerArgs.Model,
+		ServerURL:   serverURL,
+		Config:      &config,
+		stopMonitor: make(chan bool),
+	}
+
+	// Check if server is already running
+	if !checkTransformersServer(serverURL) {
+		if err := provider.startServer(); err != nil {
+			return nil, err
+		}
+	}
+
+	// Start monitoring
+	provider.monitoring = true
+	go provider.monitorServer()
+
+	return provider, nil
 }
 
 func checkTransformersServer(serverURL string) bool {
@@ -285,45 +310,62 @@ func checkTransformersServer(serverURL string) bool {
 	return resp.StatusCode == 200
 }
 
-func startTransformersServer(config Config) error {
-	serverURL := fmt.Sprintf("http://localhost:%d", config.TransformersServerArgs.Port)
+func (p *TransformersProvider) monitorServer() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
 
-	// First check if server is already running
-	if checkTransformersServer(serverURL) {
-		fmt.Println("Transformers server is already running!")
-		return nil
+	retryCount := 0
+	maxRetries := 5
+
+	for {
+		select {
+		case <-p.stopMonitor:
+			return
+		case <-ticker.C:
+			if !checkTransformersServer(p.ServerURL) {
+				fmt.Printf("Transformers server is not responding. Attempting restart (attempt %d/%d)...\n", retryCount+1, maxRetries)
+
+				// Kill existing process if any
+				if p.serverProcess != nil {
+					p.serverProcess.Kill()
+					p.serverProcess = nil
+				}
+
+				// Restart the server
+				err := p.startServer()
+				if err != nil {
+					fmt.Printf("Failed to restart Transformers server: %v\n", err)
+					retryCount++
+
+					if retryCount >= maxRetries {
+						fmt.Println("Maximum retry attempts reached. Will try again in 5 minutes.")
+						retryCount = 0
+						time.Sleep(5*time.Minute - 30*time.Second) // Adjust for ticker
+					}
+				} else {
+					fmt.Println("Transformers server restarted successfully!")
+					retryCount = 0
+				}
+			} else {
+				// Server is healthy, reset retry count
+				retryCount = 0
+			}
+		}
 	}
+}
 
-	// Check Python dependencies
-	checkCmd := `
-import torch
-import torchvision
-import transformers
-import PIL
-import flask
-print(f"Torch version: {torch.__version__}")
-print(f"Torchvision version: {torchvision.__version__}")
-print(f"Transformers version: {transformers.__version__}")
-`
-	cmd := exec.Command("python3", "-c", checkCmd)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("required Python packages not installed. Please run:\npip install -r requirements.txt\nError: %v\nOutput: %s", err, output)
-	}
-
-	fmt.Printf("Python dependencies check output:\n%s\n", output)
-
-	// Start the server with configuration
+// Add this method to start the server and track its process
+func (p *TransformersProvider) startServer() error {
 	args := []string{
 		"transformers_server.py",
-		"--port", strconv.Itoa(config.TransformersServerArgs.Port),
-		"--model", config.TransformersServerArgs.Model,
-		"--device", config.TransformersServerArgs.Device,
-		"--max-memory", fmt.Sprintf("%.2f", config.TransformersServerArgs.MaxMemory),
-		"--torch-dtype", config.TransformersServerArgs.TorchDtype,
+		"--port", strconv.Itoa(p.Config.TransformersServerArgs.Port),
+		"--model", p.Config.TransformersServerArgs.Model,
+		"--device", p.Config.TransformersServerArgs.Device,
+		"--max-memory", fmt.Sprintf("%.2f", p.Config.TransformersServerArgs.MaxMemory),
+		"--torch-dtype", p.Config.TransformersServerArgs.TorchDtype,
 	}
 
-	cmd = exec.Command("python3", args...)
+	cmd := exec.Command("python3", args...)
 
 	// Create pipes for stdout and stderr
 	stdout, err := cmd.StdoutPipe()
@@ -337,14 +379,16 @@ print(f"Transformers version: {transformers.__version__}")
 
 	// Start the command
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start Ovis server: %v", err)
+		return fmt.Errorf("failed to start Transformers server: %v", err)
 	}
+
+	// Store the process
+	p.serverProcess = cmd.Process
 
 	// Create channels for server ready signal and error
 	ready := make(chan bool)
 	errorChan := make(chan error)
 
-	// Start goroutine to read stdout
 	// Start goroutine to read stdout
 	go func() {
 		scanner := bufio.NewScanner(stdout)
@@ -372,16 +416,16 @@ print(f"Transformers version: {transformers.__version__}")
 		}
 	}()
 
-	fmt.Println("Waiting for Transformers server to start... This might take a while on first run.")
+	fmt.Println("Waiting for Transformers server to start...")
 
 	// Wait for either ready signal or error with a timeout
 	select {
 	case <-ready:
-		fmt.Println("Ovis server is ready!")
+		fmt.Println("Transformers server is ready!")
 		return nil
 	case err := <-errorChan:
 		return fmt.Errorf("server failed to start: %v", err)
-	case <-time.After(30 * time.Minute): // Generous timeout for first model load
+	case <-time.After(5 * time.Minute): // Timeout for model loading
 		return fmt.Errorf("timeout waiting for server to start")
 	}
 }

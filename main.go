@@ -209,19 +209,15 @@ func main() {
 	// Set video/audio processing capability based on provider
 	switch config.LLM.Provider {
 	case "transformers":
-		// Check if Transformers server is running
-		serverURL := fmt.Sprintf("http://localhost:%d",
-			config.TransformersServerArgs.Port)
+		// Transformers server management is now handled by the TransformersProvider
+		// in setupTransformersProvider, so we don't need to manually check/start it here
 
-		if !checkTransformersServer(serverURL) {
-			fmt.Printf("%s Transformers server not running, attempting to start...\n", Yellow)
-			if err := startTransformersServer(config); err != nil {
-				log.Fatalf("Error starting Transformers server: %v", err)
-			}
-		}
-
-		// Transformers models (like Ovis) support video/audio processing
+		// Just set capability flag
 		videoAudioProcessingCapability = false
+
+		// Log that we're using the Transformers provider
+		fmt.Printf("%s Using Transformers provider with model %s\n",
+			Yellow, config.TransformersServerArgs.Model)
 
 	case "ollama":
 		err := checkOllamaModel()
