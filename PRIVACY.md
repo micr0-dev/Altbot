@@ -32,9 +32,12 @@ The collected data is used solely for the following purposes:
 
 ## Data retention
 
-- Consent records are retained until you revoke consent by blocking the bot
-- Rate limiting data is retained for a maximum of 30 days
-- Request metadata used for analytics is anonymized after 90 days
+- **All metadata** is stored anonymously without personal identifiers
+- **Rate limiting counters** are automatically cleared at regular intervals:
+  - Short-term counters reset every 1 minute
+  - Hourly usage limits reset every 1 hour
+- **Ban list and whitelist** are maintained permanently for service functionality, but contain no personal user data or identifiable information
+- **Consent records** are maintained permanently - if you unblock the bot after previously blocking it, your original consent acknowledgment will remain valid and be used for subsequent interactions
 
 ## Your rights
 
@@ -64,4 +67,4 @@ If you have questions about this privacy policy or your data, please contact the
 
 ---
 
-Last updated: March 6, 2025
+Last updated: March 14, 2025

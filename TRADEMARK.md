@@ -1,6 +1,6 @@
 # Altbot Trademark Policy
 
-_Version 1.0 - Effective March 11, 2025_
+_Version 1.0 - Effective March 14, 2025_
 
 ## Overview
 
@@ -49,3 +49,7 @@ Specifically:
 ## Contact
 
 If you have questions about this policy or believe someone is violating it, please contact micr0@micr0.dev.
+
+---
+
+Last updated: March 14, 2025
