@@ -7,7 +7,7 @@ _Making the Fediverse more inclusive, one image at a time_
 
 [![Latest Release](https://img.shields.io/github/v/release/micr0-dev/Altbot)](https://github.com/micr0-dev/Altbot/releases)
 [![Mastodon Follow](https://img.shields.io/mastodon/follow/113183205946060973?domain=fuzzies.wtf&style=social)](https://fuzzies.wtf/@altbot)
-[![License: OWL](https://img.shields.io/badge/license-OWL-purple.svg)](https://owl-license.org/)
+[![License: OWL v2.0](https://img.shields.io/badge/License-OWL%20v2.0-ff6347.svg)](https://owl-license.org/)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/micr0-dev/Altbot)](https://go.dev/)
 ![Status](https://img.shields.io/badge/status-active-success)
 ![Environment](https://img.shields.io/badge/environment-friendly-green)
@@ -123,7 +123,7 @@ We welcome contributions! Please open an issue or submit a pull request with you
 
 ## License
 
-This project is licensed under the [OVERWORKED LICENSE (OWL) v1.0.](https://owl-license.org/) See the [LICENSE](LICENSE) file for details.
+This project is licensed under the [OVERWORKED LICENSE (OWL) v2.0.](https://owl-license.org/) See the [LICENSE](LICENSE) file for details.
 
 ---
 
