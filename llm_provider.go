@@ -354,7 +354,6 @@ func (p *TransformersProvider) monitorServer() {
 	}
 }
 
-// Add this method to start the server and track its process
 func (p *TransformersProvider) startServer() error {
 	args := []string{
 		"transformers_server.py",

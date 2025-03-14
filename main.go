@@ -758,6 +758,7 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var responses []string
+	sucessCount := 0
 	altTextGenerated := false
 	altTextAlreadyExists := false
 
@@ -807,9 +808,11 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 
 			if err != nil {
 				log.Printf("Error generating alt-text: %v", err)
+				sucessCount -= 1
 				altText = getLocalizedString(replyPost.Language, "altTextError", "response")
 			} else if altText == "" {
 				log.Printf("Error generating alt-text: Empty response")
+				sucessCount -= 1
 				altText = getLocalizedString(replyPost.Language, "altTextError", "response")
 			}
 
@@ -819,7 +822,8 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 			responses = append(responses, altText)
 			totalProcessingTimeMs += elapsed
 			mu.Unlock()
-			altTextGenerated = true
+
+			sucessCount += 1
 
 			// Log metrics for successful generation
 			metricsManager.logSuccessfulGeneration(string(replyPost.Account.ID), attachment.Type, elapsed, replyPost.Language)
@@ -827,6 +831,8 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 	}
 
 	wg.Wait()
+
+	altTextGenerated = sucessCount > 0
 
 	// Combine all responses with a separator
 	combinedResponse := strings.Join(responses, "\n―\n")
