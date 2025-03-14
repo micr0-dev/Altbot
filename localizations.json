@@ -27,7 +27,7 @@
         },
         "responses": {
             "altTextError": "Извините, я не смог обработать это изображение.",
-            "consentRequest": "Этот бот был запрошен для создания описания для вашего изображения от @%s. Вы согласны? Ответьте 'Y' или 'Yes' для продолжения.",
+            "consentRequest": "Этот бот был запрошен для создания альтернативного текста для вашего изображения пользователем @%s. Если вы соглашаетесь, вы предоставите altbot разовое разрешение на обработку этого конкретного поста. Вся обработка выполняется приватно без участия третьих сторон. Любой контент удаляется после обработки. \nПолная политика конфиденциальности: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\nВы согласны? Ответьте 'Y' или 'Yes' для продолжения.",
             "imageAlreadyHasAltText": "У этого изображения уже есть описание",
             "unsupportedFile": "Этот файл не поддерживается, в это время поддерживаются только изображения, видео и аудио",
             "providedByMessage": "Предоставлено @%s, сгенерировано с использованием %s",
@@ -44,7 +44,7 @@
         },
         "responses": {
             "altTextError": "Прабачце, я не змог апрацаваць гэтае выява.",
-            "consentRequest": "Гэты бот быў запытаны для стварэння альтэрнатыўнага тэксту для вашага выявы ад @%s. Ці згодныя вы? Адкажыце 'Y' або 'Yes' для працягу.",
+            "consentRequest": "Гэты бот быў запытаны для стварэння альтэрнатыўнага тэксту для вашага малюнка карыстальнікам @%s. Калі вы згаджаецеся, вы дасце altbot аднаразовы дазвол на апрацоўку гэтага канкрэтнага паста. Уся апрацоўка выконваецца прыватна без удзелу трэціх бакоў. Любы кантэнт выдаляецца пасля апрацоўкі. \nПоўная палітыка канфідэнцыяльнасці: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\nВы згодны? Адкажыце 'Y' або 'Yes' для працягу.",            
             "imageAlreadyHasAltText": "Гэтае выява ўжо мае альтэрнатыўны тэкст",
             "unsupportedFile": "Гэты файл не падтрымліваецца, у цяперашні час падтрымліваюцца толькі выявы, відэа і аўдыё",
             "providedByMessage": "Прадастаўлена @%s, створана з выкарыстаннем %s",
@@ -61,7 +61,7 @@
         },
         "responses": {
             "altTextError": "Lo siento, no pude procesar esta imagen.",
-            "consentRequest": "Este bot ha sido solicitado para generar un texto alternativo para tu imagen por @%s. ¿Das tu consentimiento? Responde con 'Y' o 'Yes' para continuar.",
+            "consentRequest": "Este bot ha sido solicitado para generar un texto alternativo para tu imagen por @%s. Si consientes, otorgarás a altbot un permiso único para procesar esta publicación específica. Todo el procesamiento se realiza de forma privada sin terceros. Todo el contenido se elimina después del procesamiento. \nPolítica de privacidad completa: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\n¿Das tu consentimiento? Responde con 'Y' o 'Yes' para continuar.",
             "imageAlreadyHasAltText": "Esta imagen ya tiene texto alternativo",
             "unsupportedFile": "Este archivo no es compatible, actualmente solo se admiten imágenes, videos y archivos de audio",
             "providedByMessage": "Proporcionado por @%s, generado usando %s",
@@ -78,7 +78,7 @@
         },
         "responses": {
             "altTextError": "Désolé, je n'ai pas pu traiter cette image.",
-            "consentRequest": "Ce bot a été demandé pour générer un texte alternatif pour votre image par @%s. Consentez-vous ? Répondez par 'Y' ou 'Yes' pour continuer.",
+            "consentRequest": "Ce bot a été demandé pour générer un texte alternatif pour votre image par @%s. Si vous consentez, vous accorderez à altbot une permission unique pour traiter cette publication spécifique. Tout le traitement est effectué en privé sans tiers. Tout contenu est supprimé après traitement. \nPolitique de confidentialité complète: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\nConsentez-vous? Répondez par 'Y' ou 'Yes' pour continuer.",
             "imageAlreadyHasAltText": "Cette image a déjà un texte alternatif",
             "unsupportedFile": "Ce fichier n'est pas pris en charge, actuellement seules les images, vidéos et fichiers audio sont pris en charge",
             "providedByMessage": "Fourni par @%s, généré en utilisant %s",
@@ -95,7 +95,7 @@
         },
         "responses": {
             "altTextError": "Entschuldigung, ich konnte dieses Bild nicht verarbeiten.",
-            "consentRequest": "Dieser Bot wurde durch @%s gebeten, einen Alt-Text für Ihr Bild zu erstellen. Wenn Sie zustimmen, wird Ihr Bild bei Google Gemini hochgeladen und möglicherweise als Trainingsdaten genutzt. Mehr Informationen in meiner Bio. \nStimmen Sie zu? Antworten Sie mit 'Y' oder 'Yes', um fortzufahren.",
+            "consentRequest": "Dieser Bot wurde von @%s gebeten, einen alternativen Text für Ihr Bild zu erstellen. Wenn Sie zustimmen, erteilen Sie altbot eine einmalige Erlaubnis, diesen spezifischen Beitrag zu verarbeiten. Die gesamte Verarbeitung erfolgt privat ohne Dritte. Alle Inhalte werden nach der Verarbeitung gelöscht. \nVollständige Datenschutzrichtlinie: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\nStimmen Sie zu? Antworten Sie mit 'Y' oder 'Yes', um fortzufahren.",
             "imageAlreadyHasAltText": "Dieses Bild hat bereits einen Alt-Text",
             "unsupportedFile": "Diese Datei wird nicht unterstützt, derzeit werden nur Bilder, Videos und Audiodateien unterstützt",
             "providedByMessage": "Bereitgestellt von @%s, generiert mit %s",
@@ -112,7 +112,7 @@
         },
         "responses": {
             "altTextError": "Spiacente, non sono riuscito a elaborare questa immagine.",
-            "consentRequest": "Questo bot è stato richiesto per generare un testo alternativo per la tua immagine da @%s. Acconsenti? Rispondi con 'Y' o 'Yes' per procedere.",
+            "consentRequest": "Questo bot è stato richiesto per generare un testo alternativo per la tua immagine da @%s. Se acconsenti, concederai ad altbot un'autorizzazione una tantum per elaborare questo specifico post. Tutta l'elaborazione viene eseguita privatamente senza terze parti. Qualsiasi contenuto viene eliminato dopo l'elaborazione. \nInformativa completa sulla privacy: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\nAcconsenti? Rispondi con 'Y' o 'Yes' per procedere.",
             "imageAlreadyHasAltText": "Questa immagine ha già un testo alternativo",
             "unsupportedFile": "Questo file non è supportato, attualmente sono supportati solo immagini, video e file audio",
             "providedByMessage": "Fornito da @%s, generato utilizzando %s",
@@ -129,7 +129,7 @@
         },
         "responses": {
             "altTextError": "申し訳ありませんが、この画像を処理できませんでした。",
-            "consentRequest": "このボットは、@%s によってあなたの画像の代替テキストを生成するように依頼されました。 同意しますか？ 続行するには 'Y' または 'Yes' と返信してください。",
+            "consentRequest": "このボットは、@%s によってあなたの画像の代替テキストを生成するよう依頼されました。同意すると、このボットは特定の投稿を処理するための一度限りの許可を得ることになります。すべての処理はプライベートに行われ、第三者は関与しません。すべてのコンテンツは処理後に削除されます。\nプライバシーポリシー全文: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\n同意しますか？続行するには「Y」または「Yes」と返信してください。",
             "imageAlreadyHasAltText": "この画像にはすでに代替テキストがあります",
             "unsupportedFile": "このファイルはサポートされていません。現在、サポートされているのは画像、ビデオ、およびオーディオファイルのみです",
             "providedByMessage": "@%s によって提供され、%s を使用して生成されました",
@@ -146,7 +146,7 @@
         },
         "responses": {
             "altTextError": "抱歉，我无法处理此图像。",
-            "consentRequest": "此机器人已被 @%s 请求为您的图像生成替代文本。 您同意吗？ 回复 'Y' 或 'Yes' 以继续。",
+            "consentRequest": "此机器人已被 @%s 请求为您的图像生成替代文本。如果您同意，您将授予altbot一次性权限来处理这个特定帖子。所有处理都是私密进行的，没有第三方参与。所有内容在处理后都会被删除。\n完整隐私政策：https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\n您同意吗？回复'Y'或'Yes'以继续。",
             "imageAlreadyHasAltText": "此图像已具有替代文本",
             "unsupportedFile": "此文件不受支持，目前仅支持图像、视频和音频文件",
             "providedByMessage": "由 @%s 提供，使用 %s 生成",
@@ -163,7 +163,7 @@
         },
         "responses": {
             "altTextError": "Desculpe, não consegui processar esta imagem.",
-            "consentRequest": "Este bot foi solicitado para gerar um texto alternativo para sua imagem por @%s. Você consente? Responda com 'Y' ou 'Yes' para continuar.",
+            "consentRequest": "Este bot foi solicitado para gerar um texto alternativo para sua imagem por @%s. Se você consentir, concederá ao altbot uma permissão única para processar esta publicação específica. Todo o processamento é feito de forma privada sem terceiros. Qualquer conteúdo é excluído após o processamento. \nPolítica de privacidade completa: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\nVocê consente? Responda com 'Y' ou 'Yes' para continuar.",
             "imageAlreadyHasAltText": "Esta imagem já possui texto alternativo",
             "unsupportedFile": "Este arquivo não é suportado, atualmente apenas imagens, vídeos e arquivos de áudio são suportados",
             "providedByMessage": "Fornecido por @%s, gerado usando %s",
@@ -180,7 +180,7 @@
         },
         "responses": {
             "altTextError": "죄송합니다. 이 이미지를 처리할 수 없습니다.",
-            "consentRequest": "이 봇은 @%s 에 의해 귀하의 이미지에 대한 대체 텍스트를 생성하도록 요청받았습니다. 동의하십니까? 계속하려면 'Y' 또는 'Yes'로 응답하십시오.",
+            "consentRequest": "이 봇은 @%s에 의해 귀하의 이미지에 대한 대체 텍스트를 생성하도록 요청받았습니다. 동의하시면, altbot에게 이 특정 게시물을 처리할 수 있는 일회성 권한을 부여하게 됩니다. 모든 처리는 제3자 없이 비공개로 이루어집니다. 모든 콘텐츠는 처리 후 삭제됩니다. \n전체 개인정보 보호정책: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\n동의하십니까? 계속하려면 'Y' 또는 'Yes'로 응답하십시오.",
             "imageAlreadyHasAltText": "이 이미지에는 이미 대체 텍스트가 있습니다",
             "unsupportedFile": "이 파일은 지원되지 않습니다. 현재 이미지, 비디오 및 오디오 파일만 지원됩니다",
             "providedByMessage": "@%s 에 의해 제공되었으며 %s 를 사용하여 생성되었습니다",

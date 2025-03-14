@@ -1,16 +1,17 @@
 <div align="center">
   <img src="assets/micr0-alty-banner.png" alt="A decorative banner featuring a repeating pattern of small purple robot icons against a light background, creating a retro-tech wallpaper effect">
 
-  # Altbot アクセシビリティロボット
-  
-  *Making the Fediverse more inclusive, one image at a time*
+# Altbot アクセシビリティロボット
 
-  [![Latest Release](https://img.shields.io/github/v/release/micr0-dev/Altbot)](https://github.com/micr0-dev/Altbot/releases)
-  [![Mastodon Follow](https://img.shields.io/mastodon/follow/113183205946060973?domain=fuzzies.wtf&style=social)](https://fuzzies.wtf/@altbot)
-  [![License: OWL](https://img.shields.io/badge/license-OWL-purple.svg)](https://owl-license.org/)
-  [![Go Version](https://img.shields.io/github/go-mod/go-version/micr0-dev/Altbot)](https://go.dev/)
-  ![Status](https://img.shields.io/badge/status-active-success)
-  ![Environment](https://img.shields.io/badge/environment-friendly-green)
+_Making the Fediverse more inclusive, one image at a time_
+
+[![Latest Release](https://img.shields.io/github/v/release/micr0-dev/Altbot)](https://github.com/micr0-dev/Altbot/releases)
+[![Mastodon Follow](https://img.shields.io/mastodon/follow/113183205946060973?domain=fuzzies.wtf&style=social)](https://fuzzies.wtf/@altbot)
+[![License: OWL](https://img.shields.io/badge/license-OWL-purple.svg)](https://owl-license.org/)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/micr0-dev/Altbot)](https://go.dev/)
+![Status](https://img.shields.io/badge/status-active-success)
+![Environment](https://img.shields.io/badge/environment-friendly-green)
+
 </div>
 
 ## About
@@ -19,16 +20,15 @@ Altbot is an open-source accessibility bot designed to enhance the Fediverse by 
 
 ## Privacy & GDPR Compliance
 
-**The current instance of altbot [![Mastodon Follow](https://img.shields.io/mastodon/follow/113183205946060973?domain=fuzzies.wtf&style=social)](https://fuzzies.wtf/@altbot) is using Google Gemini Flash: If you consent, your media will be uploaded to Google and might be used for training purposes.** See also: [Gemini Apps Privacy Hub](https://support.google.com/gemini/answer/13594961)  
+**Altbot 2.0 now processes everything 100% locally with zero data retention!** [![Mastodon Follow](https://img.shields.io/mastodon/follow/113183205946060973?domain=fuzzies.wtf&style=social)](https://fuzzies.wtf/@altbot)
 
-In compliance with GDPR, Altbot now requires explicit informed consent before processing any user requests. When you interact with Altbot for the first time, you'll receive a consent request with information about data collection practices and a link to our [Privacy Policy](PRIVACY.md).
+In compliance with GDPR, Altbot requires explicit informed consent before processing any user requests. When you interact with Altbot for the first time, you'll receive a consent request with information about data collection practices and a link to our [Privacy Policy](PRIVACY.md).
 
-- **What we collect:** Request timestamps, processing times, language preferences
+- **What we collect:** Request timestamps, processing times, language preferences, media type
 - **What we don't collect:** Images, personal information, content of your posts
 - **How to revoke consent:** Simply block the bot account
 
-Your post content is never used. Only images without existing alt-text will be processed.
-
+Your post content is never saved or shared. Only images without existing alt-text will be processed, and all processing happens privately on our local server.
 
 ## Disclaimer
 
@@ -48,58 +48,70 @@ Altbot listens for mentions and follows on Mastodon. When it detects a mention o
 - **Configurable Settings:** Easily configure the bot using a TOML file.
 
 ## Setup
+
 ### Standard
+
 1. Clone the repository:
-    ```sh
-    git clone https://github.com/micr0-dev/Altbot.git
-    cd Altbot
-    ```
+
+   ```sh
+   git clone https://github.com/micr0-dev/Altbot.git
+   cd Altbot
+   ```
 
 2. Run the setup wizard:
-    ```sh
-    go run .
-    ```
 
-    The setup wizard will guide you through configuring the essential values required for the bot, including:
-    - Your Mastodon server URL, client secret, access token, and bot username.
-    - The admin contact handle for moderation notifications.
-    - Enabling optional features like metrics and alt-text reminders.
-    
-    Alternatively, copy the example configuration file and edit it manually:
-    ```sh
-    cp example.config.toml config.toml
-    ```
+   ```sh
+   go run .
+   ```
+
+   The setup wizard will guide you through configuring the essential values required for the bot, including:
+
+   - Your Mastodon server URL, client secret, access token, and bot username.
+   - The admin contact handle for moderation notifications.
+   - Enabling optional features like metrics and alt-text reminders.
+
+   Alternatively, copy the example configuration file and edit it manually:
+
+   ```sh
+   cp example.config.toml config.toml
+   ```
 
 3. Run the bot:
-    ```sh
-    go run .
-    ```
+   ```sh
+   go run .
+   ```
+
 ### Docker
+
 1. Clone the repository:
-    ```sh
-    git clone https://github.com/micr0-dev/Altbot.git
-    cd Altbot
-    ```
+
+   ```sh
+   git clone https://github.com/micr0-dev/Altbot.git
+   cd Altbot
+   ```
 
 2. Run the setup wizard:
-    ```sh
-    docker run -it -v ./:/data --rm ghcr.io/micr0-dev/altbot:latest
-    ```
 
-    The setup wizard will guide you through configuring the essential values required for the bot, including:
-    - Your Mastodon server URL, client secret, access token, and bot username.
-    - The admin contact handle for moderation notifications.
-    - Enabling optional features like metrics and alt-text reminders.
-    
-    Alternatively, copy the example configuration file and edit it manually:
-    ```sh
-    cp example.config.toml config.toml
-    ```
+   ```sh
+   docker run -it -v ./:/data --rm ghcr.io/micr0-dev/altbot:latest
+   ```
+
+   The setup wizard will guide you through configuring the essential values required for the bot, including:
+
+   - Your Mastodon server URL, client secret, access token, and bot username.
+   - The admin contact handle for moderation notifications.
+   - Enabling optional features like metrics and alt-text reminders.
+
+   Alternatively, copy the example configuration file and edit it manually:
+
+   ```sh
+   cp example.config.toml config.toml
+   ```
 
 3. Run the bot:
-    ```sh
-    docker compose up -d
-    ```
+   ```sh
+   docker compose up -d
+   ```
 
 ## Contributing
 
@@ -108,7 +120,6 @@ We welcome contributions! Please open an issue or submit a pull request with you
 ## Trademark Notice
 
 "Altbot" is an unregistered trademark. While the code is open source under the OWL license, the name "Altbot" is protected. If you deploy your own instance, please refer to our [Trademark Policy](TRADEMARK.md) for naming guidelines.
-
 
 ## License
 
