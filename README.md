@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/micr0-alty-banner.png" alt="A decorative banner featuring a repeating pattern of small purple robot icons against a light background, creating a retro-tech wallpaper effect">
 
-# Altbot アクセシビリティロボット
+# Altbot™ アクセシビリティロボット
 
 _Making the Fediverse more inclusive, one image at a time_
 
@@ -16,13 +16,13 @@ _Making the Fediverse more inclusive, one image at a time_
 
 ## About
 
-Altbot is an open-source accessibility bot designed to enhance the Fediverse by generating alt-text descriptions for images, video, and audio. This helps make content more accessible to users with visual impairments.
+Altbot™ is an open-source accessibility bot designed to enhance the Fediverse by generating alt-text descriptions for images, video, and audio. This helps make content more accessible to users with visual impairments.
 
 ## Privacy & GDPR Compliance
 
-**Altbot 2.0 now processes everything 100% locally with zero data retention!** [![Mastodon Follow](https://img.shields.io/mastodon/follow/113183205946060973?domain=fuzzies.wtf&style=social)](https://fuzzies.wtf/@altbot)
+**Altbot™ 2.0 now processes everything 100% locally with zero data retention!** [![Mastodon Follow](https://img.shields.io/mastodon/follow/113183205946060973?domain=fuzzies.wtf&style=social)](https://fuzzies.wtf/@altbot)
 
-In compliance with GDPR, Altbot requires explicit informed consent before processing any user requests. When you interact with Altbot for the first time, you'll receive a consent request with information about data collection practices and a link to our [Privacy Policy](PRIVACY.md).
+In compliance with GDPR, Altbot™ requires explicit informed consent before processing any user requests. When you interact with Altbot™ for the first time, you'll receive a consent request with information about data collection practices and a link to our [Privacy Policy](PRIVACY.md).
 
 - **What we collect:** Request timestamps, processing times, language preferences, media type
 - **What we don't collect:** Images, personal information, content of your posts
@@ -36,12 +36,12 @@ Alt-texts are generated using a Large Language Model (LLM). While we strive for 
 
 ## How It Works
 
-Altbot listens for mentions and follows on Mastodon. When it detects a mention or a new post from a followed user, it checks for images without alt-text. If it finds any, it uses a Large Language Model (LLM) to generate descriptive alt-text and replies with the generated text.
+Altbot™ listens for mentions and follows on Mastodon. When it detects a mention or a new post from a followed user, it checks for images without alt-text. If it finds any, it uses a Large Language Model (LLM) to generate descriptive alt-text and replies with the generated text.
 
 ### Features
 
-- **Mention-Based Alt-Text Generation:** Mention @Altbot in a reply to any post containing an image, video, or audio, and Altbot will generate an alt-text description for it.
-- **Automatic Alt-Text for Followers:** Follow @Altbot, and it will monitor your posts. If you post an image, video, or audio without alt-text, Altbot will automatically generate one for you.
+- **Mention-Based Alt-Text Generation:** Mention @Altbot in a reply to any post containing an image, video, or audio, and Altbot™ will generate an alt-text description for it.
+- **Automatic Alt-Text for Followers:** Follow @Altbot, and it will monitor your posts. If you post an image, video, or audio without alt-text, Altbot™ will automatically generate one for you.
 - **Local LLM Support:** Use local LLMs via Ollama for generating alt-text descriptions.
 - **GDPR Compliance:** Explicit informed consent system that requires users to provide consent before processing their requests, with clear information about data usage.
 - **Consent Requests:** Ask for consent from the original poster before generating alt-text when mentioned by non-OP users.
