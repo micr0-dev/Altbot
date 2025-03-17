@@ -117,6 +117,16 @@ Altbot™ listens for mentions and follows on Mastodon. When it detects a mentio
 
 We welcome contributions! Please open an issue or submit a pull request with your improvements.
 
+## Thank You
+
+### Special Thanks
+
+I would like to express my deepest gratitude to **Henrik Schönemann** ([@Schoeneh](https://github.com/Schoeneh)) who motivated me throughout this journey. His help with handling criticism and transforming it into constructive feedback has been invaluable. I truly would not be where I am today without his support and guidance.
+
+### Kofi Supporters
+
+A heartfelt thank you to all my [Ko-fi](https://ko-fi.com/) supporters! Your generous contributions help keep Altbot™ running and continually improving. Your support means the world to me and helps make the Fediverse a more accessible place for everyone.
+
 ## Trademark Notice
 
 "Altbot" is an unregistered trademark. While the code is open source under the OWL license, the name "Altbot" is protected. If you deploy your own instance, please refer to our [Trademark Policy](TRADEMARK.md) for naming guidelines.
