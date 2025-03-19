@@ -286,14 +286,22 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 		return translationLayer.GenerateAndTranslateVideoAltText(prompt, videoData, format, targetLanguage)
 	}
 
-	// Convert video to base64
-	base64Video := base64.StdEncoding.EncodeToString(videoData)
+	// Extract frames from video
+	framesPerSecond := p.Config.VideoProcessing.NumFramesPerSecond
+	maxFrames := p.Config.VideoProcessing.MaxFrames
+
+	base64Frames, err := ExtractVideoFrames(videoData, framesPerSecond, maxFrames)
+	if err != nil {
+		return "", fmt.Errorf("error extracting video frames: %v", err)
+	}
+
+	if len(base64Frames) == 0 {
+		return "", fmt.Errorf("no frames could be extracted from video")
+	}
 
 	// Prepare the request payload
 	payload := map[string]interface{}{
-		"model":                 p.Model,
-		"num_frames_per_second": p.Config.VideoProcessing.NumFramesPerSecond,
-		"max_frames":            p.Config.VideoProcessing.MaxFrames,
+		"model": p.Model,
 		"messages": []map[string]interface{}{
 			{
 				"role": "user",
@@ -303,10 +311,8 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 						"text": prompt,
 					},
 					{
-						"type": "video_url",
-						"video_url": map[string]interface{}{
-							"url": fmt.Sprintf("data:video/%s;base64,%s", format, base64Video),
-						},
+						"type":   "video_frames",
+						"frames": base64Frames,
 					},
 				},
 			},
@@ -322,7 +328,7 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 
 	// Create HTTP client with longer timeout for videos
 	client := &http.Client{
-		Timeout: 60 * time.Second,
+		Timeout: 120 * time.Second, // Longer timeout for video processing
 	}
 
 	// Make the HTTP request to the server
@@ -347,7 +353,7 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 		return "", fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(body))
 	}
 
-	// Try to parse as JSON
+	// Parse JSON response
 	var result struct {
 		Choices []struct {
 			Message struct {
@@ -357,7 +363,7 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 	}
 
 	if err := json.Unmarshal(body, &result); err != nil {
-		return "", fmt.Errorf("error parsing JSON response (status %d): %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("error parsing JSON response: %s", string(body))
 	}
 
 	if len(result.Choices) == 0 {

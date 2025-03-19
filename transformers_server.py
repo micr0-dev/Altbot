@@ -6,9 +6,6 @@ import torch
 from PIL import Image
 import base64
 import io
-from moviepy import VideoFileClip  # type: ignore
-import tempfile
-import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,63 +52,6 @@ def load_model(args):
     logger.info("Model loaded successfully!")
 
 
-def extract_video_frames(video_data, fps=1, max_frames=100):
-    """
-    Extract frames from video data at a specified frames per second rate.
-
-    Args:
-        video_data: The binary video data
-        fps: Frames per second to extract (default: 1)
-        max_frames: Maximum number of frames to extract (default: 100)
-
-    Returns:
-        List of PIL Image objects
-    """
-    # Create temporary file to save the video
-    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_file:
-        temp_file.write(video_data)
-        video_path = temp_file.name
-
-    try:
-        frames = []
-        with VideoFileClip(video_path) as clip:
-            # Get video duration in seconds
-            duration = clip.duration
-
-            # Calculate frame extraction interval (in seconds)
-            interval = 1.0 / fps
-
-            # Calculate total number of frames to extract
-            total_frames_to_extract = min(int(duration * fps), max_frames)
-
-            if total_frames_to_extract <= 0:
-                # Edge case: very short video
-                frames = [Image.fromarray(clip.get_frame(0), mode="RGB")]
-            else:
-                # Calculate time points to extract frames
-                time_points = [
-                    min(duration - 0.001, i * interval)
-                    for i in range(total_frames_to_extract)
-                ]
-
-                # Extract frames at calculated time points
-                frames = [
-                    Image.fromarray(clip.get_frame(time_point), mode="RGB")
-                    for time_point in time_points
-                ]
-
-                logger.info(
-                    f"Extracted {len(frames)} frames at {fps} FPS from {duration:.2f}s video"
-                )
-
-    finally:
-        # Clean up temporary file
-        if os.path.exists(video_path):
-            os.remove(video_path)
-
-    return frames
-
-
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "healthy"}), 200
@@ -129,7 +69,7 @@ def chat_completions():
 
         content = messages[0].get("content", [])
         prompt = None
-        media_data = None
+        images = []
         media_type = "image"  # Default to image
 
         for item in content:
@@ -137,33 +77,25 @@ def chat_completions():
                 prompt = item["text"]
             elif item["type"] == "image_url":
                 image_url = item["image_url"]["url"]
-                media_data = base64.b64decode(image_url.split(",")[1])
-            elif item["type"] == "video_url":
-                video_url = item["video_url"]["url"]
+                image_data = base64.b64decode(image_url.split(",")[1])
+                images.append(Image.open(io.BytesIO(image_data)))
+            elif item["type"] == "video_frames":
                 media_type = "video"
-                media_data = base64.b64decode(video_url.split(",")[1])
+                # Get pre-extracted frames from the request
+                frame_list = item["frames"]
+                for frame_data in frame_list:
+                    image_data = base64.b64decode(frame_data.split(",")[1])
+                    images.append(Image.open(io.BytesIO(image_data)))
 
-        if not prompt or not media_data:
+                logger.info(f"Received {len(images)} pre-extracted video frames")
+
+        if not prompt or not images:
             return jsonify({"error": "Missing prompt or media"}), 400
 
-        # Process based on media type
-        if media_type == "video":
-            # Extract frames from video
-            fps = float(
-                data.get("num_frames_per_second", 1.0)
-            )  # Default to 1 FPS if not specified
-            max_frames = int(data.get("max_frames", 100))  # Default max frames
-
-            images = extract_video_frames(media_data, fps=fps, max_frames=max_frames)
-            if not images:
-                return jsonify({"error": "Failed to extract frames from video"}), 400
-
-            # Prepare query with multiple image tokens
+        # Prepare query based on number of images
+        if media_type == "video" or len(images) > 1:
             query = "\n".join(["<image>"] * len(images)) + "\n" + prompt
         else:
-            # Process image as before
-            image = Image.open(io.BytesIO(media_data))
-            images = [image]
             query = f"<image>\n{prompt}"
 
         prompt, input_ids, pixel_values = model.preprocess_inputs(
