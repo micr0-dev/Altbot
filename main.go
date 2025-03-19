@@ -94,9 +94,9 @@ type Config struct {
 		MaxSizeMB      uint `toml:"max_size_mb"`
 	} `toml:"image_processing"`
 	VideoProcessing struct {
-		MaxSizeMB          uint `toml:"max_size_mb"`
-		NumFramesPerSecond int  `toml:"num_frames_per_second"`
-		MaxFrames          int  `toml:"max_frames"`
+		MaxSizeMB          uint    `toml:"max_size_mb"`
+		NumFramesPerSecond float64 `toml:"num_frames_per_second"`
+		MaxFrames          int     `toml:"max_frames"`
 	} `toml:"video_processing"`
 	Behavior struct {
 		ReplyVisibility string `toml:"reply_visibility"`
