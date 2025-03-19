@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify  # type: ignore
 import logging
 import argparse
 from transformers import AutoModelForCausalLM
@@ -6,7 +6,7 @@ import torch
 from PIL import Image
 import base64
 import io
-from moviepy import VideoFileClip
+from moviepy import VideoFileClip  # type: ignore
 import tempfile
 import os
 
