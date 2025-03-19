@@ -161,7 +161,8 @@ var botAcct mastodon.Account
 
 var consentRequests = make(map[mastodon.ID]ConsentRequest)
 
-var videoAudioProcessingCapability = true
+var videoProcessingCapability = false
+var audioProcessingCapability = false
 
 var rateLimiter *RateLimiter
 
@@ -223,7 +224,7 @@ func main() {
 		// in setupTransformersProvider, so we don't need to manually check/start it here
 
 		// Just set capability flag
-		videoAudioProcessingCapability = true
+		videoProcessingCapability = true
 
 		// Log that we're using the Transformers provider
 		fmt.Printf("%s Using Transformers provider with model %s\n",
@@ -234,11 +235,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error checking Ollama model: %v", err)
 		}
-		videoAudioProcessingCapability = false
 
 	case "gemini":
 		// Gemini supports video/audio processing
-		videoAudioProcessingCapability = true
+		videoProcessingCapability = true
+		audioProcessingCapability = true
 
 	default:
 		log.Fatalf("Unsupported LLM provider: %s", config.LLM.Provider)
@@ -282,10 +283,15 @@ func main() {
 		fmt.Printf("%s Dynamic Profile Fields: %s\n", getStatusSymbol(false), "Disabled")
 	}
 
-	if videoAudioProcessingCapability {
-		fmt.Printf("%s Video/Audio Processing: %v\n", getStatusSymbol(true), videoAudioProcessingCapability)
+	if videoProcessingCapability {
+		fmt.Printf("%s Video Processing: %v\n", getStatusSymbol(true), videoProcessingCapability)
 	} else {
-		fmt.Printf("%s Video/Audio Processing: Unsupported by LLM\n", getStatusSymbol(false))
+		fmt.Printf("%s Video Processing: Unsupported by LLM\n", getStatusSymbol(false))
+	}
+	if audioProcessingCapability {
+		fmt.Printf("%s Audio Processing: %v\n", getStatusSymbol(true), audioProcessingCapability)
+	} else {
+		fmt.Printf("%s Audio Processing: Unsupported by LLM\n", getStatusSymbol(false))
 	}
 
 	PromptAdditionState = config.LLM.PromptAddition != ""
@@ -594,7 +600,7 @@ func requestConsent(c *mastodon.Client, status *mastodon.Status, notification *m
 	hasAltText := true
 
 	for _, attachment := range status.MediaAttachments {
-		if attachment.Description == "" && (attachment.Type == "image" || ((attachment.Type == "video" || attachment.Type == "gifv" || attachment.Type == "audio") && videoAudioProcessingCapability)) {
+		if attachment.Description == "" && (attachment.Type == "image" || ((attachment.Type == "video" || attachment.Type == "gifv" && videoProcessingCapability) || (attachment.Type == "audio" && audioProcessingCapability))) {
 			hasAltText = false
 		}
 	}
@@ -735,7 +741,7 @@ func handleUpdate(c *mastodon.Client, status *mastodon.Status) {
 	userID := string(status.Account.ID)
 
 	for _, attachment := range status.MediaAttachments {
-		if attachment.Type == "image" || ((attachment.Type == "video" || attachment.Type == "gifv" || attachment.Type == "audio") && videoAudioProcessingCapability) {
+		if attachment.Type == "image" || ((attachment.Type == "video" || attachment.Type == "gifv" && videoProcessingCapability) || (attachment.Type == "audio" && audioProcessingCapability)) {
 			if attachment.Description == "" {
 
 				if !HasUserConsent(userID) {
@@ -797,9 +803,9 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 
 			if attachment.Type == "image" && attachment.Description == "" {
 				altText, err = generateImageAltText(attachment.URL, replyPost.Language)
-			} else if (attachment.Type == "video" || attachment.Type == "gifv") && videoAudioProcessingCapability && attachment.Description == "" {
+			} else if (attachment.Type == "video" || attachment.Type == "gifv") && videoProcessingCapability && attachment.Description == "" {
 				altText, err = generateVideoAltText(attachment.URL, replyPost.Language)
-			} else if attachment.Type == "audio" && videoAudioProcessingCapability && attachment.Description == "" {
+			} else if attachment.Type == "audio" && audioProcessingCapability && attachment.Description == "" {
 				altText, err = generateAudioAltText(attachment.URL, replyPost.Language)
 			} else if attachment.Description != "" {
 				if !altTextGenerated && !altTextAlreadyExists {
@@ -809,7 +815,7 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 					altTextAlreadyExists = true
 				}
 				return
-			} else if videoAudioProcessingCapability {
+			} else if videoProcessingCapability && audioProcessingCapability {
 				mu.Lock()
 				responses = append(responses, getLocalizedString(replyPost.Language, "unsupportedFile", "response"))
 				mu.Unlock()

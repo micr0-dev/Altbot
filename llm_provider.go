@@ -186,9 +186,9 @@ func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format
 }
 
 func (p *OllamaProvider) GenerateVideoAltText(prompt string, videoData []byte, format string, targetLanguage string) (string, error) {
-	// Gemini currently doesn't support video processing directly
+	// Ollama currently doesn't support video processing directly
 	// You could extract frames and process as images, or return an error
-	return "", fmt.Errorf("video processing not supported by Gemini provider")
+	return "", fmt.Errorf("video processing not supported by Ollama provider")
 }
 
 func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
