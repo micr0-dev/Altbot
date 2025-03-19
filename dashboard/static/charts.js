@@ -37,6 +37,7 @@ function getChartDefaults() {
 function processMetrics(data) {
     const eventCounts = {};
     const mediaTypeCounts = {};
+    const languageCounts = {};  // Add language counts
     const userSet = new Set();
     const imageResponseTimes = [];
     const hourlyActivity = Array(24).fill(0);
@@ -50,8 +51,16 @@ function processMetrics(data) {
 
         // Process successful generations
         if (event.EventType === 'successful_generation' && event.Details) {
+            // Count media types
             const mediaType = event.Details.mediaType;
             mediaTypeCounts[mediaType] = (mediaTypeCounts[mediaType] || 0) + 1;
+
+            // Count languages
+            if (event.Details.lang) {
+                // Convert language code to full name
+                const lang = getLanguageName(event.Details.lang);
+                languageCounts[lang] = (languageCounts[lang] || 0) + 1;
+            }
 
             if (mediaType === 'image' && event.Details.responseTime) {
                 imageResponseTimes.push({
@@ -103,12 +112,47 @@ function processMetrics(data) {
     return {
         eventCounts,
         mediaTypeCounts,
+        languageCounts, 
         uniqueUsers: userSet.size,
         imageResponseTimes,
         hourlyActivity,
         avgResponseTime,
         userEngagement
     };
+}
+
+// Helper function to convert language codes to names
+function getLanguageName(code) {
+    const languages = {
+        'en': 'English',
+        'it': 'Italian',
+        'es': 'Spanish',
+        'fr': 'French',
+        'de': 'German',
+        'pt': 'Portuguese',
+        'ru': 'Russian',
+        'ja': 'Japanese',
+        'zh': 'Chinese',
+        'ko': 'Korean',
+        'ar': 'Arabic',
+        'hi': 'Hindi',
+        'tr': 'Turkish',
+        'nl': 'Dutch',
+        'pl': 'Polish',
+        'sv': 'Swedish',
+        'da': 'Danish',
+        'fi': 'Finnish',
+        'no': 'Norwegian',
+        'uk': 'Ukrainian',
+        'cs': 'Czech',
+        'hu': 'Hungarian',
+        'ro': 'Romanian',
+        'el': 'Greek',
+        'th': 'Thai',
+        'vi': 'Vietnamese',
+    };
+
+    return languages[code] || code; // Return the code if no mapping exists
 }
 
 function updateCharts(metrics) {
@@ -143,18 +187,39 @@ function updateCharts(metrics) {
     });
 
     // Media Type Distribution Pie Chart
-    const ctx2 = document.getElementById('mediaTypePie').getContext('2d');
-    if (charts.mediaTypePie) charts.mediaTypePie.destroy();
-    charts.mediaTypePie = new Chart(ctx2, {
+    const ctx2 = document.getElementById('languagePie').getContext('2d');
+    if (charts.languagePie) charts.languagePie.destroy();
+
+    // Get top languages (limit to top 8 for readability)
+    const sortedLanguages = Object.entries(metrics.languageCounts)
+        .sort((a, b) => b[1] - a[1]);
+
+    // If we have more than 8 languages, group the rest as "Other"
+    let languageLabels = [];
+    let languageData = [];
+
+    if (sortedLanguages.length > 8) {
+        languageLabels = sortedLanguages.slice(0, 7).map(item => item[0]);
+        languageData = sortedLanguages.slice(0, 7).map(item => item[1]);
+
+        // Add "Other" category
+        const otherCount = sortedLanguages.slice(7).reduce((acc, curr) => acc + curr[1], 0);
+        languageLabels.push('Other');
+        languageData.push(otherCount);
+    } else {
+        languageLabels = sortedLanguages.map(item => item[0]);
+        languageData = sortedLanguages.map(item => item[1]);
+    }
+
+    charts.languagePie = new Chart(ctx2, {
         type: 'pie',
         data: {
-            labels: Object.keys(metrics.mediaTypeCounts),
+            labels: languageLabels,
             datasets: [{
-                data: Object.values(metrics.mediaTypeCounts),
+                data: languageData,
                 backgroundColor: [
-                    '#6366f1',
-                    '#8b5cf6',
-                    '#d946ef'
+                    '#6366f1', '#8b5cf6', '#d946ef', '#ec4899', 
+                    '#f43f5e', '#f97316', '#eab308', '#84cc16'
                 ]
             }]
         },
@@ -162,11 +227,24 @@ function updateCharts(metrics) {
             ...defaultOptions,
             plugins: {
                 legend: {
-                    display: false
+                    display: false,
+                    position: 'right'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
                 }
             }
         }
     });
+
     const ctx3 = document.getElementById('combinedChart').getContext('2d');
     if (charts.combinedChart) charts.combinedChart.destroy();
 
