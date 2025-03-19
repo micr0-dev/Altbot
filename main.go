@@ -42,7 +42,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.1"
+const Version = "2.1.1"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
