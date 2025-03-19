@@ -48,7 +48,12 @@ ignore_bots = true
 [image_processing]
 # Greater values may break the image processing due to haivng a size greater than the maximum allowed by the API
 downscale_width = 800
-max_size_mb = 100                    # Maximum file size in MB for to be processed (Video, Images, Audio, etc)
+max_size_mb = 50                    # Maximum file size in MB for to be processed (Images and Audio)
+
+[video_processing]
+max_size_mb = 100                   # Maximum file size in MB for to be processed (Video only)
+num_frames_per_second = 1                     # Number of frames to extract from the video
+max_frames = 30                     # Maximum number of frames to extract from the video
 
 [behavior]
 # Maximum visibility of the replies to the bot, can be "public", "unlisted", "private" or "direct"

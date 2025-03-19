@@ -93,6 +93,11 @@ type Config struct {
 		DownscaleWidth uint `toml:"downscale_width"`
 		MaxSizeMB      uint `toml:"max_size_mb"`
 	} `toml:"image_processing"`
+	VideoProcessing struct {
+		MaxSizeMB          uint `toml:"max_size_mb"`
+		NumFramesPerSecond int  `toml:"num_frames_per_second"`
+		MaxFrames          int  `toml:"max_frames"`
+	} `toml:"video_processing"`
 	Behavior struct {
 		ReplyVisibility string `toml:"reply_visibility"`
 		FollowBack      bool   `toml:"follow_back"`
@@ -218,7 +223,7 @@ func main() {
 		// in setupTransformersProvider, so we don't need to manually check/start it here
 
 		// Just set capability flag
-		videoAudioProcessingCapability = false
+		videoAudioProcessingCapability = true
 
 		// Log that we're using the Transformers provider
 		fmt.Printf("%s Using Transformers provider with model %s\n",
@@ -1017,23 +1022,64 @@ func generateImageAltText(imageURL string, lang string) (string, error) {
 	return postProcessAltText(altText), nil
 }
 
-// generateVideoAltText generates alt-text for a video using Gemini AI
+// generateVideoAltText generates alt-text for a video using the configured LLM provider
 func generateVideoAltText(videoURL string, lang string) (string, error) {
+	resp, err := http.Get(videoURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	contentLength := resp.Header.Get("Content-Length")
+	if contentLength != "" {
+		size, err := strconv.ParseInt(contentLength, 10, 64)
+		if err == nil && size > int64(config.VideoProcessing.MaxSizeMB*1024*1024) {
+			return "", fmt.Errorf("video file size exceeds maximum limit of %d MB", config.VideoProcessing.MaxSizeMB)
+		}
+	}
+
+	videoData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	LogEvent("video_alt_text_generated")
+
 	prompt := getLocalizedString(lang, "generateVideoAltText", "prompt")
 
 	fmt.Println("Processing video: " + videoURL)
 
-	// Use the helper function to download the video
-	videoFilePath, err := downloadToTempFile(videoURL, "video", "mp4")
+	// Determine the video format from URL or content type
+	format := "mp4" // Default
+	contentType := resp.Header.Get("Content-Type")
+	if strings.Contains(contentType, "video/") {
+		format = strings.TrimPrefix(contentType, "video/")
+	} else if strings.Contains(videoURL, ".") {
+		parts := strings.Split(videoURL, ".")
+		possibleFormat := parts[len(parts)-1]
+		if isVideoFormat(possibleFormat) {
+			format = possibleFormat
+		}
+	}
+
+	altText, err := llmProvider.GenerateVideoAltText(prompt, videoData, format, lang)
 	if err != nil {
 		return "", err
 	}
-	defer os.Remove(videoFilePath) // Clean up the file afterwards
 
-	LogEvent("video_alt_text_generated")
+	return postProcessAltText(altText), nil
+}
 
-	// Pass the local temporary file path to GenerateVideoAltWithGemini
-	return GenerateVideoAltWithGemini(prompt, videoFilePath)
+// isVideoFormat checks if the given string is a known video format extension
+func isVideoFormat(format string) bool {
+	videoFormats := []string{"mp4", "webm", "mov", "avi", "mkv", "m4v", "3gp"}
+	format = strings.ToLower(format)
+	for _, f := range videoFormats {
+		if format == f {
+			return true
+		}
+	}
+	return false
 }
 
 // generateAudioAltText generates alt-text for an audio file using Gemini AI
