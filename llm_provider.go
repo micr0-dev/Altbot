@@ -21,6 +21,7 @@ import (
 // LLMProvider interface defines the methods that all LLM providers must implement
 type LLMProvider interface {
 	GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error)
+	GenerateVideoAltText(prompt string, videoData []byte, format string, targetLanguage string) (string, error)
 	Close() error
 }
 
@@ -127,6 +128,28 @@ func (p *GeminiProvider) GenerateAltText(prompt string, imageData []byte, format
 	return getResponse(resp), nil
 }
 
+func (p *GeminiProvider) GenerateVideoAltText(prompt string, videoData []byte, format string, targetLanguage string) (string, error) {
+	// Create a temporary file for the video
+	tmpFile, err := os.CreateTemp("", "video-*."+format)
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name()) // Clean up temp file when done
+
+	// Write the video data to the temporary file
+	if _, err := tmpFile.Write(videoData); err != nil {
+		return "", fmt.Errorf("failed to write video to temp file: %v", err)
+	}
+
+	// Close the file before passing it to the Gemini processor
+	if err := tmpFile.Close(); err != nil {
+		return "", fmt.Errorf("failed to close temp file: %v", err)
+	}
+
+	// Use the existing method to generate alt-text with Gemini
+	return GenerateVideoAltWithGemini(prompt, tmpFile.Name())
+}
+
 func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
 	if config.LLM.UseTranslationLayer && targetLanguage != "en" {
 		// Use translation layer
@@ -160,6 +183,12 @@ func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format
 	}
 
 	return out.String(), nil
+}
+
+func (p *OllamaProvider) GenerateVideoAltText(prompt string, videoData []byte, format string, targetLanguage string) (string, error) {
+	// Ollama currently doesn't support video processing directly
+	// You could extract frames and process as images, or return an error
+	return "", fmt.Errorf("video processing not supported by Ollama provider")
 }
 
 func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
@@ -239,6 +268,95 @@ func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, 
 
 	if err := json.Unmarshal(body, &result); err != nil {
 		// Log the actual response for debugging
+		return "", fmt.Errorf("error parsing JSON response (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("no choices in response: %s", string(body))
+	}
+
+	return result.Choices[0].Message.Content, nil
+}
+
+// GenerateVideoAltText generates alt text for a video using the Transformers model
+func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []byte, format string, targetLanguage string) (string, error) {
+	if config.LLM.UseTranslationLayer && targetLanguage != "en" {
+		// Use translation layer
+		translationLayer := NewTranslationLayer(p)
+		return translationLayer.GenerateAndTranslateVideoAltText(prompt, videoData, format, targetLanguage)
+	}
+
+	// Convert video to base64
+	base64Video := base64.StdEncoding.EncodeToString(videoData)
+
+	// Prepare the request payload
+	payload := map[string]interface{}{
+		"model":                 p.Model,
+		"num_frames_per_second": p.Config.VideoProcessing.NumFramesPerSecond,
+		"max_frames":            p.Config.VideoProcessing.MaxFrames,
+		"messages": []map[string]interface{}{
+			{
+				"role": "user",
+				"content": []map[string]interface{}{
+					{
+						"type": "text",
+						"text": prompt,
+					},
+					{
+						"type": "video_url",
+						"video_url": map[string]interface{}{
+							"url": fmt.Sprintf("data:video/%s;base64,%s", format, base64Video),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("error marshaling JSON: %v", err)
+	}
+
+	fullURL := fmt.Sprintf("%s/v1/chat/completions", p.ServerURL)
+
+	// Create HTTP client with longer timeout for videos
+	client := &http.Client{
+		Timeout: 60 * time.Second,
+	}
+
+	// Make the HTTP request to the server
+	resp, err := client.Post(
+		fullURL,
+		"application/json",
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return "", fmt.Errorf("error making request to server: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read the entire response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %v", err)
+	}
+
+	// Check if response is successful
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Try to parse as JSON
+	var result struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.Unmarshal(body, &result); err != nil {
 		return "", fmt.Errorf("error parsing JSON response (status %d): %s", resp.StatusCode, string(body))
 	}
 

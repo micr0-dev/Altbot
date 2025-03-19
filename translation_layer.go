@@ -145,6 +145,37 @@ func (t *TranslationLayer) translateWithTransformers(provider *TransformersProvi
 	return result.Choices[0].Message.Content, nil
 }
 
+// GenerateAndTranslateVideoAltText first generates video alt-text in English, then translates to target language
+func (t *TranslationLayer) GenerateAndTranslateVideoAltText(prompt string, videoData []byte, format string, targetLanguageCode string) (string, error) {
+	englishPrompt := getLocalizedString("en", "generateVideoAltText", "prompt")
+
+	englishAltText, err := t.provider.GenerateVideoAltText(englishPrompt, videoData, format, "en")
+	if err != nil {
+		return "", fmt.Errorf("error generating English video alt-text: %v", err)
+	}
+
+	// If target language is English, return the result directly
+	if strings.HasPrefix(strings.ToLower(targetLanguageCode), "en") {
+		return englishAltText, nil
+	}
+
+	targetLanguageName := getLanguageName(targetLanguageCode)
+
+	translationPrompt := fmt.Sprintf(
+		"Translate the following video description to %s, maintaining all details. Your response should only be the translated text:\n\n%s",
+		targetLanguageName,
+		englishAltText,
+	)
+
+	// Call the same LLM but without the video for translation
+	translatedText, err := t.translateText(translationPrompt)
+	if err != nil {
+		return "", fmt.Errorf("error translating video alt-text: %v", err)
+	}
+
+	return translatedText, nil
+}
+
 // getLanguageName returns the full language name for a given language code
 func getLanguageName(langCode string) string {
 	switch langCode {
