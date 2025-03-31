@@ -934,7 +934,7 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 			}
 		}
 
-		if config.AltTextReminders.Enabled && visibility != "direct" {
+		if config.AltTextReminders.Enabled && visibility != "direct" && HasUserConsent(string(replyPost.Account.ID)) {
 			queuePostForAltTextCheck(status, string(replyPost.Account.ID))
 		}
 
