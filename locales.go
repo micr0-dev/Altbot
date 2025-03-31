@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 )
 
@@ -37,8 +36,6 @@ func getLocalizedString(lang, key string, category string) string {
 	if value, ok := localizations[lang]; ok {
 		localization = value
 	}
-
-	log.Printf("Using localization %s for %s with key %s. Post lang: %s", localization, category, key, lang)
 
 	switch category {
 	case "prompt":
