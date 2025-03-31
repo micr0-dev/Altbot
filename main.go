@@ -19,6 +19,7 @@ import (
 	"image/png"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -2047,4 +2048,34 @@ func updateBotProfile(client *mastodon.Client, config Config) error {
 
 	fmt.Printf("%s Profile fields updated successfully\n", getStatusSymbol(true))
 	return nil
+}
+
+// Add this function somewhere in your code
+func addAprilFoolsJoke(altText string) string {
+	// List of possible April Fools jokes to append
+	jokes := []string{
+		"...but what you don't see is the ghost hiding in the corner.",
+		"...there's also a tiny Obsidian portal to the Nether dimension in the background.",
+		"...three invisible unicorns are having tea just out of frame.",
+		"...a time traveler from Ancient Rome is just out of frame, taking notes.",
+		"...if you look closely, there's a miniature Tom Scott hiding in the shadows.",
+		"...the arrangement of objects secretly spells out 'Send Help' in Morse code.",
+		"...this image is actually part of an elaborate treasure map when combined with 17 other specific images.",
+		"...and gravity is actually working sideways in this image.",
+		"...the photographer was abducted by Google moments after taking this.",
+		"...current weather conditions inside this image: light rain with a chance of pie.",
+		"...the image is haunted by the ghost of a very polite Victorian gentleman.",
+		"...the image is actually a coded message from a secret society of time travelers.",
+		"...the image is a rare glimpse into the alternate universe where cats rule the world.",
+		"...the image is a snapshot from the annual meeting of the International Society of Invisible People.",
+		"...the image is a rare glimpse into the secret world of sentient robots.",
+		"...the image has been cursed by Essem, but it's nothing to worry about.",
+		"...the image is actually a coded message from the future warning of the impending robot uprising.",
+		"...the image is a rare glimpse into the secret world of sentient AI.",
+	}
+
+	joke := jokes[rand.Intn(len(jokes))]
+
+	// Add a separator and the joke
+	return altText + "\n\n" + joke
 }

@@ -275,7 +275,11 @@ func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, 
 		return "", fmt.Errorf("no choices in response: %s", string(body))
 	}
 
-	return result.Choices[0].Message.Content, nil
+	response := result.Choices[0].Message.Content
+
+	response = addAprilFoolsJoke(response)
+
+	return response, nil
 }
 
 // GenerateVideoAltText generates alt text for a video using the Transformers model
@@ -370,7 +374,11 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 		return "", fmt.Errorf("no choices in response: %s", string(body))
 	}
 
-	return result.Choices[0].Message.Content, nil
+	response := result.Choices[0].Message.Content
+
+	response = addAprilFoolsJoke(response)
+
+	return response, nil
 }
 
 // Close implementations for each provider
