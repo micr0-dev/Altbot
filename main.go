@@ -2077,5 +2077,5 @@ func addAprilFoolsJoke(altText string) string {
 	joke := jokes[rand.Intn(len(jokes))]
 
 	// Add a separator and the joke
-	return altText + "\n\n" + joke
+	return altText + " " + joke
 }
