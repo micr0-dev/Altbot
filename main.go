@@ -2050,32 +2050,166 @@ func updateBotProfile(client *mastodon.Client, config Config) error {
 	return nil
 }
 
-// Add this function somewhere in your code
-func addAprilFoolsJoke(altText string) string {
-	// List of possible April Fools jokes to append
-	jokes := []string{
-		"...but what you don't see is the ghost hiding in the corner.",
-		"...there's also a tiny Obsidian portal to the Nether dimension in the background.",
-		"...three invisible unicorns are having tea just out of frame.",
-		"...a time traveler from Ancient Rome is just out of frame, taking notes.",
-		"...if you look closely, there's a miniature Tom Scott hiding in the shadows.",
-		"...the arrangement of objects secretly spells out 'Send Help' in Morse code.",
-		"...this image is actually part of an elaborate treasure map when combined with 17 other specific images.",
-		"...and gravity is actually working sideways in this image.",
-		"...the photographer was abducted by Google moments after taking this.",
-		"...current weather conditions inside this image: light rain with a chance of pie.",
-		"...the image is haunted by the ghost of a very polite Victorian gentleman.",
-		"...the image is actually a coded message from a secret society of time travelers.",
-		"...the image is a rare glimpse into the alternate universe where cats rule the world.",
-		"...the image is a snapshot from the annual meeting of the International Society of Invisible People.",
-		"...the image is a rare glimpse into the secret world of sentient robots.",
-		"...the image has been cursed by Essem, but it's nothing to worry about.",
-		"...the image is actually a coded message from the future warning of the impending robot uprising.",
-		"...the image is a rare glimpse into the secret world of sentient AI.",
+func addAprilFoolsJoke(altText string, lang string) string {
+	// Define jokes for different languages
+	jokesByLanguage := map[string][]string{
+		// English
+		"en": {
+			"...but what you don't see is the ghost hiding in the corner.",
+			"...there's also a tiny Obsidian portal to the Nether dimension in the background.",
+			"...three invisible unicorns are having tea just out of frame.",
+			"...a time traveler from Ancient Rome is just out of frame, taking notes.",
+			"...if you look closely, there's a miniature Tom Scott hiding in the shadows.",
+			"...the arrangement of objects secretly spells out 'Send Help' in Morse code.",
+			"...this image is actually part of an elaborate treasure map when combined with 17 other specific images.",
+			"...and gravity is actually working sideways in this image.",
+			"...the photographer was abducted by Google moments after taking this.",
+			"...current weather conditions inside this image: light rain with a chance of pie.",
+			"...the image is haunted by the ghost of a very polite Victorian gentleman.",
+			"...the image is actually a coded message from a secret society of time travelers.",
+			"...the image is a rare glimpse into the alternate universe where cats rule the world.",
+			"...the image is a snapshot from the annual meeting of the International Society of Invisible People.",
+			"...the image is a rare glimpse into the secret world of sentient robots.",
+			"...the image has been cursed by Essem, but it's nothing to worry about.",
+			"...the image is actually a coded message from the future warning of the impending robot uprising.",
+			"...the image is a rare glimpse into the secret world of sentient AI.",
+		},
+		// German (de)
+		"de": {
+			"...aber was Sie nicht sehen, ist der Geist, der sich in der Ecke versteckt.",
+			"...im Hintergrund befindet sich auch ein winziges Obsidian-Portal zur Netherdimension.",
+			"...drei unsichtbare Einhörner trinken gleich außerhalb des Bildes Tee.",
+			"...ein Zeitreisender aus dem alten Rom macht sich gerade außerhalb des Bildes Notizen.",
+			"...wenn Sie genau hinschauen, versteckt sich ein Miniatur-Tom Scott in den Schatten.",
+			"...die Anordnung der Objekte buchstabiert heimlich 'Hilfe' im Morsecode.",
+			"...dieses Bild ist tatsächlich Teil einer ausgeklügelten Schatzkarte, wenn es mit 17 anderen spezifischen Bildern kombiniert wird.",
+			"...und die Schwerkraft wirkt in diesem Bild tatsächlich seitwärts.",
+			"...der Fotograf wurde von Google entführt, kurz nachdem er dies aufgenommen hatte.",
+			"...aktuelle Wetterbedingungen in diesem Bild: leichter Regen mit Aussicht auf Kuchen.",
+			"...das Bild wird vom Geist eines sehr höflichen viktorianischen Gentleman heimgesucht.",
+			"...das Bild ist eigentlich eine codierte Nachricht von einer Geheimgesellschaft von Zeitreisenden.",
+			"...das Bild ist ein seltener Einblick in das Paralleluniversum, in dem Katzen die Welt regieren.",
+			"...das Bild ist eine Momentaufnahme vom jährlichen Treffen der Internationalen Gesellschaft Unsichtbarer Menschen.",
+			"...das Bild ist ein seltener Einblick in die geheime Welt der fühlenden Roboter.",
+			"...das Bild wurde von Essem verflucht, aber das ist kein Grund zur Sorge.",
+			"...das Bild ist eigentlich eine codierte Nachricht aus der Zukunft, die vor dem bevorstehenden Roboteraufstand warnt.",
+			"...das Bild ist ein seltener Einblick in die geheime Welt der fühlenden KI.",
+		},
+		// Italian (it)
+		"it": {
+			"...ma quello che non vedi è il fantasma nascosto nell'angolo.",
+			"...c'è anche un minuscolo portale di Ossidiana verso la dimensione Nether sullo sfondo.",
+			"...tre unicorni invisibili stanno prendendo il tè appena fuori dall'inquadratura.",
+			"...un viaggiatore nel tempo dell'antica Roma sta prendendo appunti appena fuori dall'inquadratura.",
+			"...se guardi attentamente, c'è un Tom Scott in miniatura nascosto nelle ombre.",
+			"...la disposizione degli oggetti scrive segretamente 'Aiuto' in codice Morse.",
+			"...questa immagine è in realtà parte di una elaborata mappa del tesoro quando combinata con altre 17 immagini specifiche.",
+			"...e la gravità in questa immagine funziona effettivamente di lato.",
+			"...il fotografo è stato rapito da Google subito dopo aver scattato questa foto.",
+			"...condizioni meteorologiche attuali in questa immagine: pioggia leggera con possibilità di torta.",
+			"...l'immagine è infestata dal fantasma di un gentiluomo vittoriano molto educato.",
+			"...l'immagine è in realtà un messaggio codificato da una società segreta di viaggiatori nel tempo.",
+			"...l'immagine è uno scorcio raro dell'universo alternativo dove i gatti governano il mondo.",
+			"...l'immagine è un'istantanea dell'incontro annuale della Società Internazionale delle Persone Invisibili.",
+			"...l'immagine è uno scorcio raro del mondo segreto dei robot senzienti.",
+			"...l'immagine è stata maledetta da Essem, ma non c'è nulla di cui preoccuparsi.",
+			"...l'immagine è in realtà un messaggio codificato dal futuro che avverte dell'imminente rivolta dei robot.",
+			"...l'immagine è uno scorcio raro del mondo segreto dell'IA senziente.",
+		},
+		// Portuguese (pt)
+		"pt": {
+			"...mas o que você não vê é o fantasma escondido no canto.",
+			"...também há um pequeno portal de Obsidiana para a dimensão Nether no fundo.",
+			"...três unicórnios invisíveis estão tomando chá fora do enquadramento.",
+			"...um viajante do tempo da Roma Antiga está tomando notas fora do enquadramento.",
+			"...se olhar atentamente, há um Tom Scott em miniatura escondido nas sombras.",
+			"...a disposição dos objetos soletram secretamente 'Socorro' em código Morse.",
+			"...esta imagem é na verdade parte de um elaborado mapa do tesouro quando combinada com outras 17 imagens específicas.",
+			"...e a gravidade está na verdade funcionando de lado nesta imagem.",
+			"...o fotógrafo foi abduzido pelo Google momentos depois de tirar esta foto.",
+			"...condições climáticas atuais dentro desta imagem: chuva leve com possibilidade de torta.",
+			"...a imagem é assombrada pelo fantasma de um cavalheiro vitoriano muito educado.",
+			"...a imagem é na verdade uma mensagem codificada de uma sociedade secreta de viajantes do tempo.",
+			"...a imagem é um vislumbre raro do universo alternativo onde os gatos governam o mundo.",
+			"...a imagem é uma foto da reunião anual da Sociedade Internacional de Pessoas Invisíveis.",
+			"...a imagem é um vislumbre raro do mundo secreto dos robôs sencientes.",
+			"...a imagem foi amaldiçoada por Essem, mas não há nada com que se preocupar.",
+			"...a imagem é na verdade uma mensagem codificada do futuro alertando sobre a iminente revolta dos robôs.",
+			"...a imagem é um vislumbre raro do mundo secreto da IA senciente.",
+		},
+		// Dutch (nl)
+		"nl": {
+			"...maar wat je niet ziet, is de geest die in de hoek verstopt zit.",
+			"...er is ook een klein Obsidiaan portaal naar de Nether-dimensie op de achtergrond.",
+			"...drie onzichtbare eenhoorns drinken thee net buiten beeld.",
+			"...een tijdreiziger uit het oude Rome maakt aantekeningen net buiten beeld.",
+			"...als je goed kijkt, is er een miniatuur Tom Scott verstopt in de schaduwen.",
+			"...de rangschikking van objecten spelt in het geheim 'Help' in morsecode.",
+			"...deze afbeelding is eigenlijk onderdeel van een uitgebreide schatkaart wanneer gecombineerd met 17 andere specifieke afbeeldingen.",
+			"...en zwaartekracht werkt eigenlijk zijwaarts in deze afbeelding.",
+			"...de fotograaf werd ontvoerd door Google vlak nadat hij dit had genomen.",
+			"...huidige weersomstandigheden in deze afbeelding: lichte regen met kans op taart.",
+			"...de afbeelding wordt achtervolgd door de geest van een zeer beleefde Victoriaanse heer.",
+			"...de afbeelding is eigenlijk een gecodeerde boodschap van een geheim genootschap van tijdreizigers.",
+			"...de afbeelding is een zeldzame blik in het alternatieve universum waar katten de wereld regeren.",
+			"...de afbeelding is een momentopname van de jaarlijkse bijeenkomst van de Internationale Vereniging van Onzichtbare Mensen.",
+			"...de afbeelding is een zeldzame blik in de geheime wereld van bewuste robots.",
+			"...de afbeelding is vervloekt door Essem, maar er is niets om je zorgen over te maken.",
+			"...de afbeelding is eigenlijk een gecodeerde boodschap uit de toekomst die waarschuwt voor de naderende robotopstand.",
+			"...de afbeelding is een zeldzame blik in de geheime wereld van bewuste AI.",
+		},
+		// Spanish (es)
+		"es": {
+			"...pero lo que no ves es el fantasma escondido en la esquina.",
+			"...también hay un pequeño portal de Obsidiana a la dimensión del Nether en el fondo.",
+			"...tres unicornios invisibles están tomando té justo fuera del encuadre.",
+			"...un viajero del tiempo de la Antigua Roma está tomando notas justo fuera del encuadre.",
+			"...si miras de cerca, hay un Tom Scott en miniatura escondido en las sombras.",
+			"...la disposición de los objetos deletrea secretamente 'Ayuda' en código Morse.",
+			"...esta imagen es en realidad parte de un elaborado mapa del tesoro cuando se combina con otras 17 imágenes específicas.",
+			"...y la gravedad en realidad está funcionando de lado en esta imagen.",
+			"...el fotógrafo fue secuestrado por Google momentos después de tomar esto.",
+			"...condiciones climáticas actuales dentro de esta imagen: lluvia ligera con probabilidad de pastel.",
+			"...la imagen está embrujada por el fantasma de un caballero victoriano muy educado.",
+			"...la imagen es en realidad un mensaje codificado de una sociedad secreta de viajeros en el tiempo.",
+			"...la imagen es un vistazo raro al universo alternativo donde los gatos gobiernan el mundo.",
+			"...la imagen es una instantánea de la reunión anual de la Sociedad Internacional de Personas Invisibles.",
+			"...la imagen es un vistazo raro al mundo secreto de los robots sensibles.",
+			"...la imagen ha sido maldita por Essem, pero no hay nada de qué preocuparse.",
+			"...la imagen es en realidad un mensaje codificado del futuro que advierte sobre el inminente levantamiento de los robots.",
+			"...la imagen es un vistazo raro al mundo secreto de la IA sensible.",
+		},
+		// Japanese (ja)
+		"ja": {
+			"...しかし、あなたが見えないのは、隅に隠れている幽霊です。",
+			"...背景には、ネザー次元への小さな黒曜石のポータルもあります。",
+			"...3匹の目に見えないユニコーンがフレームのすぐ外でお茶を飲んでいます。",
+			"...古代ローマからの時間旅行者がフレームのすぐ外でメモを取っています。",
+			"...よく見ると、影に隠れているミニチュアのトム・スコットがいます。",
+			"...物の配置は密かにモールス信号で「助けて」と綴っています。",
+			"...この画像は、他の17の特定の画像と組み合わせると、実は精巧な宝の地図の一部です。",
+			"...そしてこの画像では、重力が実際に横向きに働いています。",
+			"...写真家はこれを撮った直後にGoogleに誘拐されました。",
+			"...この画像内の現在の気象条件：パイの可能性のある小雨。",
+			"...この画像は、非常に礼儀正しいヴィクトリア朝の紳士の幽霊に取り憑かれています。",
+			"...この画像は実は、時間旅行者の秘密結社からの暗号化されたメッセージです。",
+			"...この画像は、猫が世界を支配する別の宇宙への珍しい一瞥です。",
+			"...この画像は、国際目に見えない人々の協会の年次総会のスナップショットです。",
+			"...この画像は、知覚するロボットの秘密の世界への珍しい一瞥です。",
+			"...この画像はEssemによって呪われていますが、心配する必要はありません。",
+			"...この画像は実は、差し迫ったロボットの反乱を警告する未来からの暗号化されたメッセージです。",
+			"...この画像は、知覚するAIの秘密の世界への珍しい一瞥です。",
+		},
+	}
+
+	// Get jokes for the specified language, or default to English if not available
+	jokes, exists := jokesByLanguage[lang]
+	if !exists {
+		jokes = jokesByLanguage["en"] // Default to English
 	}
 
 	joke := jokes[rand.Intn(len(jokes))]
 
-	// Add a separator and the joke
-	return altText + " " + joke
+	// Add the joke with the appropriate label
+	return altText + "\n\n" + joke
 }

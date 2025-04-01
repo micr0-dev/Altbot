@@ -277,7 +277,7 @@ func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, 
 
 	response := result.Choices[0].Message.Content
 
-	response = addAprilFoolsJoke(response)
+	response = addAprilFoolsJoke(response, targetLanguage)
 
 	return response, nil
 }
@@ -376,7 +376,7 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 
 	response := result.Choices[0].Message.Content
 
-	response = addAprilFoolsJoke(response)
+	response = addAprilFoolsJoke(response, targetLanguage)
 
 	return response, nil
 }
