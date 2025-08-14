@@ -42,7 +42,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.1.1"
+const Version = "2.1.2"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
@@ -911,6 +911,10 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 		case "direct,private":
 			visibility = "direct"
 		case "direct,direct":
+			visibility = "direct"
+		}
+
+		if replyPost.Visibility == "private" {
 			visibility = "direct"
 		}
 

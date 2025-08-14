@@ -1,7 +1,7 @@
 {
     "en": {
         "prompts": {
-            "generateAltText": "Generate an alt-text description, which is a description for people who can't see the image. Be sure to talk about the actual contents of it, do not interpret anything. Start with a general description, then focus on details. Do it in two steps and show those steps as one text: ",
+            "generateAltText": "Generate an alt-text description, which is a description for people who can't see the image. Be sure to talk about the actual contents of it, do not interpret anything. Start with a general description, then focus on details. Do it in two steps and show those steps as one text. If the image is complex or has many different elements, please try to summarize it in around 5 sentences: ",
             "generateVideoAltText": "Generate an alt-text description, which is a description for people who can't hear or see this video. Be sure to say the actual exact contents of the video not just talk about it. Include details about the audio and video. If something is said, transcribe it word for word. Be detailed but don't go too in-depth, just write about the main subjects in English: ",
             "generateAudioAltText": "Generate an alt-text description, which is a description for people who can't hear this audio. Be sure to say the actual exact contents of the audio not just talk about it. If something is said, transcribe it word for word. Be detailed but don't go too in-depth, just write about the main subjects in English: "
         },
@@ -21,7 +21,7 @@
     },
     "ru": {
         "prompts": {
-            "generateAltText": "Создайте описание для изображения, которое будет полезно для людей, которые не могут его видеть. Будьте подробны, но не слишком углубляйтесь, просто опишите основные объекты на Русском: ",
+            "generateAltText": "Создайте описание для изображения, которое будет полезно для людей, которые не могут его видеть. Будьте подробны, но не слишком углубляйтесь, просто опишите основные объекты на Русском. Если изображение сложное или содержит много разных элементов, попробуйте обобщить его примерно в 5 предложениях: ",
             "generateVideoAltText": "Создайте описание для видео, которое будет полезно для людей, которые не могут его видеть или слышать. Обязательно укажите точное содержание видео, включая аудио и видео. Если что-то сказано, транскрибируйте это слово в слово. Будьте подробны, но не слишком углубляйтесь, просто опишите основные объекты на Русском: ",
             "generateAudioAltText": "Создайте описание для аудио, которое будет полезно для людей, которые не могут его слышать. Обязательно укажите точное содержание аудио. Если что-то сказано, транскрибируйте это слово в слово. Будьте подробны, но не слишком углубляйтесь, просто опишите основные объекты на Русском: "
         },
@@ -38,7 +38,7 @@
     },
     "be": {
         "prompts": {
-            "generateAltText": "Стварыце апісанне альтэрнатыўнага тэксту, якое з'яўляецца апісаннем для людзей, якія не могуць бачыць выяву. Будзьце падрабязнымі, але не занадта, проста апішыце асноўныя аб'екты на беларускай мове: ",
+            "generateAltText": "Стварыце апісанне альтэрнатыўнага тэксту, якое з'яўляецца апісаннем для людзей, якія не могуць бачыць выяву. Будзьце падрабязнымі, але не занадта, проста апішыце асноўныя аб'екты на беларускай мове. Калі выява складаная або змяшчае шмат розных элементаў, паспрабуйце абагульніць яе прыблізна ў 5 сказах: ",
             "generateVideoAltText": "Стварыце апісанне для відэа, якое будзе карысным для людзей, якія не могуць яго бачыць або чуць. Абавязкова ўкажыце дакладнае змесціва відэа, уключаючы аўдыё і відэа. Калі нешта сказана, транскрыбіруйце гэта слова ў слова. Будзьце падрабязнымі, але не занадта, проста апішыце асноўныя аб'екты на беларускай мове: ",
             "generateAudioAltText": "Стварыце апісанне для аўдыё, якое будзе карысным для людзей, якія не могуць яго чуць. Абавязкова ўкажыце дакладнае змесціва аўдыё. Калі нешта сказана, транскрыбіруйце гэта слова ў слова. Будзьце падрабязнымі, але не занадта, проста апішыце асноўныя аб'екты на беларускай мове: "
         },
@@ -55,7 +55,7 @@
     },
     "es": {
         "prompts": {
-            "generateAltText": "Genera una descripción de texto alternativo, que es una descripción para personas que no pueden ver la imagen. Sé detallado pero no te extiendas demasiado, solo escribe sobre los temas principales en Español: ",
+            "generateAltText": "Genera una descripción de texto alternativo, que es una descripción para personas que no pueden ver la imagen. Sé detallado pero no te extiendas demasiado, solo escribe sobre los temas principales en Español. Si la imagen es compleja o tiene muchos elementos diferentes, trata de resumirla en aproximadamente 5 oraciones: ",
             "generateVideoAltText": "Genera una descripción de texto alternativo para el video, que es una descripción para personas que no pueden ver o escuchar este video. Asegúrate de decir el contenido exacto del video, incluyendo detalles sobre el audio y el video. Si se dice algo, transcríbelo palabra por palabra. Sé detallado pero no te extiendas demasiado, solo escribe sobre los temas principales en Español: ",
             "generateAudioAltText": "Genera una descripción de texto alternativo para el audio, que es una descripción para personas que no pueden escuchar este audio. Asegúrate de decir el contenido exacto del audio. Si se dice algo, transcríbelo palabra por palabra. Sé detallado pero no te extiendas demasiado, solo escribe sobre los temas principales en Español: "
         },
@@ -72,7 +72,7 @@
     },
     "fr": {
         "prompts": {
-            "generateAltText": "Générez une description de texte alternatif, qui est une description pour les personnes qui ne peuvent pas voir l'image. Soyez détaillé mais ne rentrez pas trop dans les détails, écrivez simplement sur les sujets principaux en Français: ",
+            "generateAltText": "Générez une description de texte alternatif, qui est une description pour les personnes qui ne peuvent pas voir l'image. Soyez détaillé mais ne rentrez pas trop dans les détails, écrivez simplement sur les sujets principaux en Français. Si l'image est complexe ou contient de nombreux éléments différents, essayez de la résumer en environ 5 phrases: ",
             "generateVideoAltText": "Générez une description de texte alternatif pour la vidéo, qui est une description pour les personnes qui ne peuvent pas voir ou entendre cette vidéo. Assurez-vous de dire le contenu exact de la vidéo, y compris les détails sur l'audio et la vidéo. Si quelque chose est dit, transcrivez-le mot pour mot. Soyez détaillé mais ne rentrez pas trop dans les détails, écrivez simplement sur les sujets principaux en Français: ",
             "generateAudioAltText": "Générez une description de texte alternatif pour l'audio, qui est une description pour les personnes qui ne peuvent pas entendre cet audio. Assurez-vous de dire le contenu exact de l'audio. Si quelque chose est dit, transcrivez-le mot pour mot. Soyez détaillé mais ne rentrez pas trop dans les détails, écrivez simplement sur les sujets principaux en Français: "
         },
@@ -84,12 +84,12 @@
             "providedByMessage": "Fourni par @%s, généré en utilisant %s",
             "providedByMessageLocal": "Fourni par @%s, généré localement et en privé en utilisant %s",
             "altTextReminder": "Bonjour @%s, veuillez ajouter du texte alternatif à vos images en modifiant votre publication. Le texte alternatif dans les commentaires n'est pas facilement accessible aux lecteurs d'écran ! Merci !",
-            "energyUsageMessage": "🌱 Énergie utilisée : %.3f Wh"
+            "energyUsageMessage": "🌱 Énergie utilisée : %.3f Wh"
         }
     },
     "de": {
         "prompts": {
-            "generateAltText": "Erstellen Sie eine Alt-Text-Beschreibung, die eine Beschreibung für Menschen ist, die das Bild nicht sehen können. Seien Sie detailliert, aber gehen Sie nicht zu sehr ins Detail, schreiben Sie einfach über die Hauptthemen auf Deutsch: ",
+            "generateAltText": "Erstellen Sie eine Alt-Text-Beschreibung, die eine Beschreibung für Menschen ist, die das Bild nicht sehen können. Seien Sie detailliert, aber gehen Sie nicht zu sehr ins Detail, schreiben Sie einfach über die Hauptthemen auf Deutsch. Wenn das Bild komplex ist oder viele verschiedene Elemente hat, versuchen Sie es in etwa 5 Sätzen zusammenzufassen: ",
             "generateVideoAltText": "Erstellen Sie eine Alt-Text-Beschreibung für das Video, die eine Beschreibung für Menschen ist, die dieses Video nicht sehen oder hören können. Stellen Sie sicher, dass Sie den genauen Inhalt des Videos angeben, einschließlich Details zu Audio und Video. Wenn etwas gesagt wird, transkribieren Sie es Wort für Wort. Seien Sie detailliert, aber gehen Sie nicht zu sehr ins Detail, schreiben Sie einfach über die Hauptthemen auf Deutsch: ",
             "generateAudioAltText": "Erstellen Sie eine Alt-Text-Beschreibung für das Audio, die eine Beschreibung für Menschen ist, die dieses Audio nicht hören können. Stellen Sie sicher, dass Sie den genauen Inhalt des Audios angeben. Wenn etwas gesagt wird, transkribieren Sie es Wort für Wort. Seien Sie detailliert, aber gehen Sie nicht zu sehr ins Detail, schreiben Sie einfach über die Hauptthemen auf Deutsch: "
         },
@@ -106,7 +106,7 @@
     },
     "it": {
         "prompts": {
-            "generateAltText": "Genera una descrizione del testo alternativo, che è una descrizione per le persone che non possono vedere l'immagine. Sii dettagliato ma non troppo, scrivi solo sui soggetti principali in Italiano: ",
+            "generateAltText": "Genera una descrizione del testo alternativo, che è una descrizione per le persone che non possono vedere l'immagine. Sii dettagliato ma non troppo, scrivi solo sui soggetti principali in Italiano. Se l'immagine è complessa o ha molti elementi diversi, cerca di riassumerla in circa 5 frasi: ",
             "generateVideoAltText": "Genera una descrizione del testo alternativo per il video, che è una descrizione per le persone che non possono vedere o ascoltare questo video. Assicurati di dire il contenuto esatto del video, inclusi i dettagli sull'audio e sul video. Se viene detto qualcosa, trascrivilo parola per parola. Sii dettagliato ma non troppo, scrivi solo sui soggetti principali in Italiano: ",
             "generateAudioAltText": "Genera una descrizione del testo alternativo per l'audio, che è una descrizione per le persone che non possono ascoltare questo audio. Assicurati di dire il contenuto esatto dell'audio. Se viene detto qualcosa, trascrivilo parola per parola. Sii dettagliato ma non troppo, scrivi solo sui soggetti principali in Italiano: "
         },
@@ -123,7 +123,7 @@
     },
     "ja": {
         "prompts": {
-            "generateAltText": "画像が見えない人のための説明文である代替テキストの説明を生成してください。詳細に記述してくださいが、あまり深入りせず、主要な主題について日本語で書いてください: ",
+            "generateAltText": "画像が見えない人のための説明文である代替テキストの説明を生成してください。詳細に記述してくださいが、あまり深入りせず、主要な主題について日本語で書いてください。画像が複雑で多くの異なる要素がある場合は、約5文で要約してください: ",
             "generateVideoAltText": "ビデオが見えないまたは聞こえない人のための説明文である代替テキストの説明を生成してください。ビデオの正確な内容を、音声と映像の詳細を含めて述べてください。何かが言われた場合、それを一言一句正確に書き起こしてください。詳細に記述してくださいが、あまり深入りせず、主要な主題について日本語で書いてください: ",
             "generateAudioAltText": "オーディオが聞こえない人のための説明文である代替テキストの説明を生成してください。オーディオの正確な内容を述べてください。何かが言われた場合、それを一言一句正確に書き起こしてください。詳細に記述してくださいが、あまり深入りせず、主要な主題について日本語で書いてください: "
         },
@@ -140,7 +140,7 @@
     },
     "zh": {
         "prompts": {
-            "generateAltText": "生成替代文本描述，这是为看不见图像的人提供的描述。 请详细描述，但不要过于深入，只需用中文写出主要内容: ",
+            "generateAltText": "生成替代文本描述，这是为看不见图像的人提供的描述。 请详细描述，但不要过于深入，只需用中文写出主要内容。如果图像复杂或有许多不同的元素，请尝试用大约5句话来概括: ",
             "generateVideoAltText": "生成视频的替代文本描述，这是为看不见或听不见此视频的人提供的描述。 请务必说明视频的实际内容，包括音频和视频的详细信息。如果有说话，请逐字转录。 请详细描述，但不要过于深入，只需用中文写出主要内容: ",
             "generateAudioAltText": "生成音频的替代文本描述，这是为听不见此音频的人提供的描述。 请务必说明音频的实际内容。如果有说话，请逐字转录。 请详细描述，但不要过于深入，只需用中文写出主要内容: "
         },
@@ -157,7 +157,7 @@
     },
     "pt": {
         "prompts": {
-            "generateAltText": "Gere uma descrição de texto alternativo, que é uma descrição para pessoas que não podem ver a imagem. Seja detalhado, mas não vá muito a fundo, apenas escreva sobre os principais assuntos em Português: ",
+            "generateAltText": "Gere uma descrição de texto alternativo, que é uma descrição para pessoas que não podem ver a imagem. Seja detalhado, mas não vá muito a fundo, apenas escreva sobre os principais assuntos em Português. Se a imagem for complexa ou tiver muitos elementos diferentes, tente resumi-la em cerca de 5 frases: ",
             "generateVideoAltText": "Gere uma descrição de texto alternativo para o vídeo, que é uma descrição para pessoas que não podem ver ou ouvir este vídeo. Certifique-se de dizer o conteúdo exato do vídeo, incluindo detalhes sobre o áudio e o vídeo. Se algo for dito, transcreva palavra por palavra. Seja detalhado, mas não vá muito a fundo, apenas escreva sobre os principais assuntos em Português: ",
             "generateAudioAltText": "Gere uma descrição de texto alternativo para o áudio, que é uma descrição para pessoas que não podem ouvir este áudio. Certifique-se de dizer o conteúdo exato do áudio. Se algo for dito, transcreva palavra por palavra. Seja detalhado, mas não vá muito a fundo, apenas escreva sobre os principais assuntos em Português: "
         },
@@ -174,7 +174,7 @@
     },
     "ko": {
         "prompts": {
-            "generateAltText": "이미지를 볼 수 없는 사람들을 위한 설명인 대체 텍스트 설명을 생성하세요. 자세히 설명하되 너무 깊이 들어가지 말고 주요 주제에 대해 한국어로 작성하세요: ",
+            "generateAltText": "이미지를 볼 수 없는 사람들을 위한 설명인 대체 텍스트 설명을 생성하세요. 자세히 설명하되 너무 깊이 들어가지 말고 주요 주제에 대해 한국어로 작성하세요. 이미지가 복잡하거나 많은 다른 요소가 있는 경우 약 5문장으로 요약해 보세요: ",
             "generateVideoAltText": "비디오를 볼 수 없거나 들을 수 없는 사람들을 위한 설명인 대체 텍스트 설명을 생성하세요. 비디오의 실제 내용을, 오디오 및 비디오에 대한 세부 정보를 포함하여 설명하세요. 무언가가 말해지면 단어 그대로 전사하세요. 자세히 설명하되 너무 깊이 들어가지 말고 주요 주제에 대해 한국어로 작성하세요: ",
             "generateAudioAltText": "오디오를 들을 수 없는 사람들을 위한 설명인 대체 텍스트 설명을 생성하세요. 오디오의 실제 내용을 설명하세요. 무언가가 말해지면 단어 그대로 전사하세요. 자세히 설명하되 너무 깊이 들어가지 말고 주요 주제에 대해 한국어로 작성하세요: "
         },
@@ -188,5 +188,25 @@
             "altTextReminder": "안녕하세요 @%s, 게시물을 편집하여 이미지에 대체 텍스트를 추가해 주세요. 댓글에 있는 대체 텍스트는 화면 판독기에 쉽게 접근할 수 없습니다! 감사합니다!",
             "energyUsageMessage": "🌱 에너지 사용량: %.3f Wh"
         }
-    }
+    },
+    "pl": {
+        "prompts": {
+            "generateAltText": "Wygeneruj opis alternatywny (alt-text) dla osób, które nie widzą obrazu. Opisz wyłącznie faktyczną zawartość bez interpretacji. Zacznij ogólnym opisem, potem najważniejsze szczegóły. Napisz jeden krótki akapit (5–10 krótkich zdań, maks. ~750 znaków). Jeśli obraz jest złożony, streść go. Bez list, nagłówków ani formatowania – sam zwykły tekst po polsku: ",
+            "generateVideoAltText": "Wygeneruj opis alternatywny (alt-text) w języku polskim dla wideo dla osób, które nie mogą go zobaczyć/Usłyszeć. Opisz dokładnie zawartość (istotne sceny, dźwięki/mowę – bez pełnej transkrypcji). Jeden krótki akapit (5–10 zdań, maks. ~750 znaków). Bez list i formatowania: ",
+            "generateAudioAltText": "Wygeneruj opis alternatywny (alt-text) w języku polskim dla nagrania audio dla osób, które nie mogą go usłyszeć. Zwięźle streść treść i najważniejsze dźwięki/mowę (bez pełnej transkrypcji). Jeden krótki akapit (5–10 zdań, maks. ~750 znaków). Bez list i formatowania: "
+       },
+        "responses": {
+            "altTextError": "Przepraszam, nie mogłem przetworzyć tego pliku.",
+            "consentRequest": "Ten bot został poproszony o wygenerowanie alt-tekstu do Twojego obrazu przez @%s. Jeśli się zgadzasz, wyślij odpowiedź. Szczegóły prywatności: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md\n\nCzy wyrażasz zgodę? Odpowiedz „Y” lub „Yes”, aby kontynuować.",
+            "gdprConsentRequest": "Potrzebuję Twojej wyraźnej zgody, aby generować alt-teksty do Twoich multimediów. Szczegóły: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md",
+            "gdprConsentConfirmation": "Dziękuję! Zgoda została zapisana. Możesz ją cofnąć w dowolnym momencie przez zablokowanie tego konta.",
+            "gdprWelcomeMessage": "Cześć! Pomagam generować alt-teksty, aby Twoje posty były bardziej dostępne. Zanim zaczniemy:",
+            "imageAlreadyHasAltText": "Ten obraz ma już opis alternatywny",
+            "unsupportedFile": "Ten plik nie jest obsługiwany — obecnie obsługiwane są tylko obrazy, wideo i audio",
+            "providedByMessage": "Dostarczone przez @%s, wygenerowane za pomocą %s",
+            "providedByMessageLocal": "Dostarczone przez @%s, wygenerowane lokalnie i prywatnie za pomocą %s",
+            "altTextReminder": "Cześć @%s, proszę dodaj alt-tekst edytując swój wpis — alt-tekst w komentarzach jest trudno dostępny dla czytników ekranu! Dziękuję!",
+            "energyUsageMessage": "🌱 Zużyta energia: %.3f Wh"
+        }
+}
 }
