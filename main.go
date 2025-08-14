@@ -173,7 +173,7 @@ var llmProvider LLMProvider
 const (
 	sourceURL = "https://github.com/micr0-dev/Altbot"
 	donateURL = "https://ko-fi.com/micr0byte"
-	creator   = "@micr0@fuzzies.wtf"
+	creator   = "@micr0@wetdry.world"
 )
 
 func main() {
