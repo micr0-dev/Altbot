@@ -33,7 +33,8 @@ type GeminiProvider struct {
 
 // OllamaProvider implements LLMProvider for Ollama
 type OllamaProvider struct {
-	model string
+	model     string
+	keepAlive string
 }
 
 // TransformersProvider implements LLMProvider for Hugging Face Transformers
@@ -109,9 +110,29 @@ func setupOllamaProvider(config Config) (*OllamaProvider, error) {
 			config.LLM.OllamaModel, config.LLM.OllamaModel)
 	}
 
-	return &OllamaProvider{
-		model: config.LLM.OllamaModel,
-	}, nil
+	// Set default keep-alive if not specified
+	keepAlive := config.LLM.OllamaKeepAlive
+	if keepAlive == "" {
+		keepAlive = "5m" // Default to 5 minutes
+	}
+
+	provider := &OllamaProvider{
+		model:     config.LLM.OllamaModel,
+		keepAlive: keepAlive,
+	}
+
+	// If persistent serving is enabled, pre-load the model
+	if keepAlive == "-1" {
+		fmt.Println("Pre-loading Ollama model for persistent serving...")
+		cmd := exec.Command("ollama", "run", provider.model, "--keepalive", keepAlive, "echo", "Model loaded")
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Warning: Failed to pre-load model: %v\n", err)
+		} else {
+			fmt.Println("Ollama model loaded and will remain in RAM")
+		}
+	}
+
+	return provider, nil
 }
 
 // GenerateAltText implementations for each provider
@@ -172,7 +193,7 @@ func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format
 	}
 
 	// Prepare the Ollama command
-	cmd := exec.Command("ollama", "run", p.model, fmt.Sprintf("%s %s", prompt, tmpFile.Name()))
+	cmd := exec.Command("ollama", "run", p.model, "--keepalive", p.keepAlive, fmt.Sprintf("%s %s", prompt, tmpFile.Name()))
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
