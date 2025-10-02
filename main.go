@@ -34,6 +34,8 @@ import (
 	"golang.org/x/image/tiff"
 	"golang.org/x/image/webp"
 	"golang.org/x/net/html"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/mattn/go-mastodon"
@@ -42,7 +44,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.1.2"
+const Version = "2.1.3"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
@@ -1940,7 +1942,7 @@ func getProviderAttribution(config Config, lang string) string {
 			modelName := config.TransformersServerArgs.Model
 			modelInfo = strings.Split(modelName, "/")[1] // Just use the model name without path
 		} else {
-			modelInfo = strings.Split(config.LLM.OllamaModel, ":")[0] // Just use the base model name
+			modelInfo = cases.Title(language.Und).String(strings.Split(config.LLM.OllamaModel, ":")[0]) + strings.Split(strings.Split(config.LLM.OllamaModel, ":")[1], "-")[0]
 		}
 
 	case "gemini":
