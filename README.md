@@ -127,10 +127,6 @@ I would like to express my deepest gratitude to **Henrik Schönemann** ([@Schoen
 
 A heartfelt thank you to all my [Ko-fi](https://ko-fi.com/) supporters! Your generous contributions help keep Altbot running and continually improving. Your support means the world to me and helps make the Fediverse a more accessible place for everyone.
 
-## Trademark Notice
-
-"Altbot" is an unregistered trademark. While the code is open source under the OWL license, the name "Altbot" is protected. If you deploy your own instance, please refer to our [Trademark Policy](TRADEMARK.md) for naming guidelines.
-
 ## License
 
 This project is licensed under the [OVERWORKED LICENSE (OWL) v2.0.](https://owl-license.org/) See the [LICENSE](LICENSE) file for details.
