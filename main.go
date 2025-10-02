@@ -61,6 +61,7 @@ type Config struct {
 	LLM struct {
 		Provider            string `toml:"provider"`
 		OllamaModel         string `toml:"ollama_model"`
+		OllamaKeepAlive     string `toml:"ollama_keep_alive"`
 		UseTranslationLayer bool   `toml:"use_translation_layer"`
 		PromptAddition      string `toml:"prompt_additional_instructions"`
 		PromptOverride      string `toml:"prompt_override"`
