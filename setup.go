@@ -16,7 +16,6 @@ import (
 )
 
 // RunSetupWizard guides the user through setup and writes config to a file
-// RunSetupWizard guides the user through setup and writes config to a file
 func runSetupWizard(filePath string) {
 	fmt.Println(Cyan + "Welcome to the Altbot Setup Wizard!" + Reset)
 
@@ -60,7 +59,7 @@ func runSetupWizard(filePath string) {
 
 		if config.LLM.Provider == "ollama" {
 			config.LLM.OllamaModel = promptString(Green+"Ollama Model Name:"+Reset, config.LLM.OllamaModel)
-			
+
 			fmt.Println(Yellow + "\nOllama Model Keep-Alive Settings:" + Reset)
 			fmt.Println("This controls how long the model stays loaded in RAM after a request.")
 			fmt.Println("Options:")
