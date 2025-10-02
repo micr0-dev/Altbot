@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"os"
 	"os/exec"
@@ -14,8 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
+	genai "google.golang.org/genai"
 )
 
 // LLMProvider interface defines the methods that all LLM providers must implement
@@ -27,8 +28,9 @@ type LLMProvider interface {
 
 // GeminiProvider implements LLMProvider for Google's Gemini
 type GeminiProvider struct {
-	model  *genai.GenerativeModel
-	client *genai.Client
+	client           *genai.Client
+	modelName        string
+	generationConfig *genai.GenerateContentConfig
 }
 
 // OllamaProvider implements LLMProvider for Ollama
@@ -63,38 +65,33 @@ func NewLLMProvider(config Config) (LLMProvider, error) {
 
 // Setup functions for each provider
 func setupGeminiProvider(config Config) (*GeminiProvider, error) {
-	client, err := genai.NewClient(ctx, option.WithAPIKey(config.Gemini.APIKey))
+	baseCtx := ctx
+	if baseCtx == nil {
+		baseCtx = context.Background()
+	}
+
+	geminiClient, err := genai.NewClient(baseCtx, &genai.ClientConfig{
+		APIKey:  config.Gemini.APIKey,
+		Backend: genai.BackendGeminiAPI,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	model := client.GenerativeModel(config.Gemini.Model)
-	model.SetTemperature(config.Gemini.Temperature)
-	model.SetTopK(config.Gemini.TopK)
-
-	model.SafetySettings = []*genai.SafetySetting{
-		{
-			Category:  genai.HarmCategoryHarassment,
-			Threshold: mapHarmBlock(config.Gemini.HarassmentThreshold),
-		},
-		{
-			Category:  genai.HarmCategoryHateSpeech,
-			Threshold: mapHarmBlock(config.Gemini.HateSpeechThreshold),
-		},
-		{
-			Category:  genai.HarmCategorySexuallyExplicit,
-			Threshold: mapHarmBlock(config.Gemini.SexuallyExplicitThreshold),
-		},
-		{
-			Category:  genai.HarmCategoryDangerousContent,
-			Threshold: mapHarmBlock(config.Gemini.DangerousContentThreshold),
+	provider := &GeminiProvider{
+		client:    geminiClient,
+		modelName: config.Gemini.Model,
+		generationConfig: &genai.GenerateContentConfig{
+			Temperature: genai.Ptr(config.Gemini.Temperature),
+			TopK:        genai.Ptr(float32(config.Gemini.TopK)),
 		},
 	}
 
-	return &GeminiProvider{
-		model:  model,
-		client: client,
-	}, nil
+	client = provider.client
+	geminiModelName = provider.modelName
+	geminiGenerationConfig = cloneGenerateContentConfig(provider.generationConfig)
+
+	return provider, nil
 }
 
 func setupOllamaProvider(config Config) (*OllamaProvider, error) {
@@ -137,11 +134,16 @@ func setupOllamaProvider(config Config) (*OllamaProvider, error) {
 
 // GenerateAltText implementations for each provider
 func (p *GeminiProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
-	var parts []genai.Part
-	parts = append(parts, genai.Text(prompt))
-	parts = append(parts, genai.ImageData(format, imageData))
+	mimeType, err := inferImageMIME(format)
+	if err != nil {
+		return "", err
+	}
+	parts := []*genai.Part{
+		&genai.Part{Text: prompt},
+		&genai.Part{InlineData: &genai.Blob{Data: imageData, MIMEType: mimeType}},
+	}
 
-	resp, err := p.model.GenerateContent(ctx, parts...)
+	resp, err := p.generateContent(parts)
 	if err != nil {
 		return "", err
 	}
@@ -169,6 +171,17 @@ func (p *GeminiProvider) GenerateVideoAltText(prompt string, videoData []byte, f
 
 	// Use the existing method to generate alt-text with Gemini
 	return GenerateVideoAltWithGemini(prompt, tmpFile.Name())
+}
+
+func (p *GeminiProvider) generateContent(parts []*genai.Part) (*genai.GenerateContentResponse, error) {
+	if p.client == nil {
+		return nil, fmt.Errorf("gemini client is not initialized")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	contents := []*genai.Content{{Parts: parts}}
+	return p.client.Models.GenerateContent(ctx, p.modelName, contents, cloneGenerateContentConfig(p.generationConfig))
 }
 
 func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
@@ -396,9 +409,6 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 
 // Close implementations for each provider
 func (p *GeminiProvider) Close() error {
-	if p.client != nil {
-		p.client.Close()
-	}
 	return nil
 }
 
@@ -417,6 +427,78 @@ func (p *TransformersProvider) Close() error {
 		p.serverProcess = nil
 	}
 	return nil
+}
+
+func inferImageMIME(format string) (string, error) {
+	switch strings.ToLower(format) {
+	case "jpg", "jpeg":
+		return "image/jpeg", nil
+	case "png":
+		return "image/png", nil
+	case "gif":
+		return "image/gif", nil
+	case "bmp":
+		return "image/bmp", nil
+	case "tif", "tiff":
+		return "image/tiff", nil
+	case "webp":
+		return "image/webp", nil
+	default:
+		return "", fmt.Errorf("unsupported image format: %s", format)
+	}
+}
+
+func inferMIMEFromExtension(format string, fallbackPrefix string) (string, error) {
+	if format == "" {
+		return "", fmt.Errorf("missing file format")
+	}
+	ext := "." + strings.TrimPrefix(strings.ToLower(format), ".")
+	mimeType := mime.TypeByExtension(ext)
+	if mimeType != "" {
+		return mimeType, nil
+	}
+	switch ext {
+	case ".mp4":
+		return "video/mp4", nil
+	case ".mov":
+		return "video/quicktime", nil
+	case ".mkv":
+		return "video/x-matroska", nil
+	case ".avi":
+		return "video/x-msvideo", nil
+	case ".webm":
+		return "video/webm", nil
+	case ".m4v":
+		return "video/x-m4v", nil
+	case ".3gp":
+		return "video/3gpp", nil
+	case ".wav":
+		return "audio/wav", nil
+	case ".mp3":
+		return "audio/mpeg", nil
+	case ".flac":
+		return "audio/flac", nil
+	case ".ogg":
+		return "audio/ogg", nil
+	case ".aac":
+		return "audio/aac", nil
+	case ".m4a":
+		return "audio/mp4", nil
+	case ".opus":
+		return "audio/ogg", nil
+	}
+	if fallbackPrefix == "" {
+		return "", fmt.Errorf("unknown MIME type for extension %s", ext)
+	}
+	return fmt.Sprintf("%s/%s", fallbackPrefix, strings.TrimPrefix(ext, ".")), nil
+}
+
+func cloneGenerateContentConfig(cfg *genai.GenerateContentConfig) *genai.GenerateContentConfig {
+	if cfg == nil {
+		return nil
+	}
+	clone := *cfg
+	return &clone
 }
 
 func setupTransformersProvider(config Config) (*TransformersProvider, error) {

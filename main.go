@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -37,10 +38,10 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/google/generative-ai-go/genai"
+	genai "google.golang.org/genai"
+
 	"github.com/mattn/go-mastodon"
 	"github.com/nfnt/resize"
-	"google.golang.org/api/option"
 )
 
 // Version of the bot
@@ -157,8 +158,9 @@ const (
 
 var defaultConfig Config
 var config Config
-var model *genai.GenerativeModel
 var client *genai.Client
+var geminiModelName string
+var geminiGenerationConfig *genai.GenerateContentConfig
 var ctx context.Context
 var botAcct mastodon.Account
 
@@ -492,55 +494,36 @@ func fetchAndVerifyBotAccountID(c *mastodon.Client) (mastodon.ID, error) {
 
 // Setup initializes the Gemini AI model with the provided API key
 func Setup(apiKey string) error {
-	ctx = context.Background()
-
-	var err error
-	client, err = genai.NewClient(ctx, option.WithAPIKey(apiKey))
-	if err != nil {
-		return err
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
-	model = client.GenerativeModel(config.Gemini.Model)
+	if config.LLM.Provider != "gemini" {
+		return nil
+	}
 
-	model.SetTemperature(config.Gemini.Temperature)
-	model.SetTopK(config.Gemini.TopK)
+	if client == nil {
+		var err error
+		client, err = genai.NewClient(ctx, &genai.ClientConfig{
+			APIKey:  apiKey,
+			Backend: genai.BackendGeminiAPI,
+		})
+		if err != nil {
+			return err
+		}
+	}
 
-	model.SafetySettings = []*genai.SafetySetting{
-		{
-			Category:  genai.HarmCategoryHarassment,
-			Threshold: mapHarmBlock(config.Gemini.HarassmentThreshold),
-		},
-		{
-			Category:  genai.HarmCategoryHateSpeech,
-			Threshold: mapHarmBlock(config.Gemini.HateSpeechThreshold),
-		},
-		{
-			Category:  genai.HarmCategorySexuallyExplicit,
-			Threshold: mapHarmBlock(config.Gemini.SexuallyExplicitThreshold),
-		},
-		{
-			Category:  genai.HarmCategoryDangerousContent,
-			Threshold: mapHarmBlock(config.Gemini.DangerousContentThreshold),
-		},
+	if geminiModelName == "" {
+		geminiModelName = config.Gemini.Model
+	}
+	if geminiGenerationConfig == nil {
+		geminiGenerationConfig = cloneGenerateContentConfig(&genai.GenerateContentConfig{
+			Temperature: genai.Ptr(config.Gemini.Temperature),
+			TopK:        genai.Ptr(float32(config.Gemini.TopK)),
+		})
 	}
 
 	return nil
-}
-
-// mapHarmBlock maps the TOML string values to the genai package constants
-func mapHarmBlock(threshold string) genai.HarmBlockThreshold {
-	switch threshold {
-	case "none":
-		return genai.HarmBlockNone
-	case "low":
-		return genai.HarmBlockLowAndAbove
-	case "medium":
-		return genai.HarmBlockMediumAndAbove
-	case "high":
-		return genai.HarmBlockOnlyHigh
-	default:
-		return genai.HarmBlockNone
-	}
 }
 
 // handleMention processes incoming mentions and generates alt-text descriptions
@@ -1116,14 +1099,28 @@ func generateAudioAltText(audioURL string, lang string) (string, error) {
 
 // Generate creates a response using the Gemini AI model
 func GenerateImageAltWithGemini(strPrompt string, image []byte, fileExtension string) (string, error) {
-	var parts []genai.Part
-
-	parts = append(parts, genai.Text(strPrompt))
-	parts = append(parts, genai.ImageData(fileExtension, image))
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if client == nil {
+		return "", fmt.Errorf("gemini client not initialized")
+	}
+	if geminiModelName == "" {
+		geminiModelName = config.Gemini.Model
+	}
+	mimeType, err := inferImageMIME(fileExtension)
+	if err != nil {
+		return "", err
+	}
+	parts := []*genai.Part{
+		{Text: strPrompt},
+		{InlineData: &genai.Blob{Data: image, MIMEType: mimeType}},
+	}
+	contents := []*genai.Content{{Parts: parts}}
 
 	fmt.Println("Generating content...")
 
-	resp, err := model.GenerateContent(ctx, parts...)
+	resp, err := client.Models.GenerateContent(ctx, geminiModelName, contents, cloneGenerateContentConfig(geminiGenerationConfig))
 	if err != nil {
 		return "", err
 	}
@@ -1139,30 +1136,46 @@ func GenerateVideoAltWithGemini(strPrompt string, videoFilePath string) (string,
 	}
 	defer videoFile.Close()
 
-	// Upload the video using the File API
-	opts := genai.UploadFileOptions{DisplayName: "Video for Alt-Text"}
-	response, err := client.UploadFile(ctx, "", videoFile, &opts)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if client == nil {
+		return "", fmt.Errorf("gemini client not initialized")
+	}
+	if geminiModelName == "" {
+		geminiModelName = config.Gemini.Model
+	}
+	mimeType, err := inferMIMEFromExtension(filepath.Ext(videoFilePath), "video")
+	if err != nil {
+		return "", err
+	}
+
+	uploadedFile, err := client.Files.Upload(ctx, videoFile, &genai.UploadFileConfig{
+		DisplayName: "Video for Alt-Text",
+		MIMEType:    mimeType,
+	})
 	if err != nil {
 		return "", err
 	}
 
 	// Poll until the file is in the ACTIVE state
+	response := uploadedFile
 	for response.State == genai.FileStateProcessing {
 		time.Sleep(1 * time.Second)
-		response, err = client.GetFile(ctx, response.Name)
+		response, err = client.Files.Get(ctx, response.Name, nil)
 		if err != nil {
 			return "", err
 		}
 	}
 
 	// Create a prompt using the text and the URI reference for the uploaded file
-	prompt := []genai.Part{
-		genai.FileData{URI: response.URI},
-		genai.Text(strPrompt),
+	parts := []*genai.Part{
+		{FileData: &genai.FileData{FileURI: response.URI, MIMEType: response.MIMEType}},
+		{Text: strPrompt},
 	}
+	contents := []*genai.Content{{Parts: parts}}
 
-	// Generate content using the prompt
-	resp, err := model.GenerateContent(ctx, prompt...)
+	resp, err := client.Models.GenerateContent(ctx, geminiModelName, contents, cloneGenerateContentConfig(geminiGenerationConfig))
 	if err != nil {
 		return "", err
 	}
@@ -1180,30 +1193,46 @@ func GenerateAudioAltWithGemini(strPrompt string, audioFilePath string) (string,
 	}
 	defer audioFile.Close()
 
-	// Upload the audio using the File API
-	opts := genai.UploadFileOptions{DisplayName: "Audio for Alt-Text"}
-	response, err := client.UploadFile(ctx, "", audioFile, &opts)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if client == nil {
+		return "", fmt.Errorf("gemini client not initialized")
+	}
+	if geminiModelName == "" {
+		geminiModelName = config.Gemini.Model
+	}
+	mimeType, err := inferMIMEFromExtension(filepath.Ext(audioFilePath), "audio")
+	if err != nil {
+		return "", err
+	}
+
+	uploadedFile, err := client.Files.Upload(ctx, audioFile, &genai.UploadFileConfig{
+		DisplayName: "Audio for Alt-Text",
+		MIMEType:    mimeType,
+	})
 	if err != nil {
 		return "", err
 	}
 
 	// Poll until the file is in the ACTIVE state
+	response := uploadedFile
 	for response.State == genai.FileStateProcessing {
 		time.Sleep(10 * time.Second)
-		response, err = client.GetFile(ctx, response.Name)
+		response, err = client.Files.Get(ctx, response.Name, nil)
 		if err != nil {
 			return "", err
 		}
 	}
 
 	// Create a prompt using the text and the URI reference for the uploaded file
-	prompt := []genai.Part{
-		genai.FileData{URI: response.URI},
-		genai.Text(strPrompt),
+	parts := []*genai.Part{
+		{FileData: &genai.FileData{FileURI: response.URI, MIMEType: response.MIMEType}},
+		{Text: strPrompt},
 	}
+	contents := []*genai.Content{{Parts: parts}}
 
-	// Generate content using the prompt
-	resp, err := model.GenerateContent(ctx, prompt...)
+	resp, err := client.Models.GenerateContent(ctx, geminiModelName, contents, cloneGenerateContentConfig(geminiGenerationConfig))
 	if err != nil {
 		return "", err
 	}
