@@ -45,7 +45,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.1.3"
+const Version = "2.2"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
@@ -1971,7 +1971,7 @@ func getProviderAttribution(config Config, lang string) string {
 			modelName := config.TransformersServerArgs.Model
 			modelInfo = strings.Split(modelName, "/")[1] // Just use the model name without path
 		} else {
-			modelInfo = cases.Title(language.Und).String(strings.Split(config.LLM.OllamaModel, ":")[0]) + strings.Split(strings.Split(config.LLM.OllamaModel, ":")[1], "-")[0]
+			modelInfo = cases.Title(language.Und).String(strings.Split(config.LLM.OllamaModel, ":")[0]) + ":" + strings.Split(strings.Split(config.LLM.OllamaModel, ":")[1], "-")[0]
 		}
 
 	case "gemini":
