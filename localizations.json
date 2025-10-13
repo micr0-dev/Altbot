@@ -208,5 +208,25 @@
             "altTextReminder": "Cześć @%s, proszę dodaj alt-tekst edytując swój wpis — alt-tekst w komentarzach jest trudno dostępny dla czytników ekranu! Dziękuję!",
             "energyUsageMessage": "🌱 Zużyta energia: %.3f Wh"
         }
-    }
+    },
+    "eu": {
+        "prompts": {
+            "generateAltText": "Sortu alt-testu deskribapen bat, irudia ikusi ezin duten pertsonentzat. Ziurtatu irudiaren benetako edukiari buruz hitz egiten duzula; ez interpretatu edo ez suposatu ezer. Hasi deskribapen orokor batekin, eta, ondoren, xehetasunetan zentratu. Irudia konplexua bada edo elementu ezberdin asko baditu, saiatu 5 esaldi ingurutan laburtzen. Testurik badago, adierazi hitzez hitz. Ez suposatu generorik. Idatzi zure alt-testua hurrengo lerroan:",
+            "generateVideoAltText": "Sortu alt-testu deskribapen bat, bideo hau entzun edo ikusi ezin duten pertsonentzat. Ziurtatu bideoaren benetako eduki zehatza adierazten duzula; ez interpretatu edo ez suposatu ezer. Audioari eta bideoari buruzko xehetasunak sartu. Zerbait esaten bada, transkribatu hitzez hitz. Testurik badago, adierazi hitzez hitz. Ez suposatu generorik. Idatzi zure alt-testua hurrengo lerroan:",
+            "generateAudioAltText": "Sortu alt-testu deskribapen bat, audio hau entzun ezin duten pertsonentzat. Ziurtatu audioaren benetako eduki zehatza adierazten duzula; ez interpretatu edo ez suposatu ezer. Zerbait esaten bada, transkribatu hitzez hitz. Ez suposatu generorik. Idatzi zure alt-testua hurrengo lerroan:"
+        },
+        "responses": {
+            "altTextError": "Barkatu, ezin izan dut irudia prozesatu.",
+            "consentRequest": "Bot honi zure irudirako alt-testu bat sortzeko eskatu dio @%s erabiltzaileak. Onartzen baduzu, Altbot-i behin-behineko baimena emango diozu post zehatz hori prozesatzeko. Prozesamendu guztia modu pribatuan egiten da, hirugarrenik gabe. Eduki guztiak prozesatu ondoren ezabatzen dira. Pribatutasun-politika osoa: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md Onartzen al duzu? Erantzun 'Y' edo 'Yes' aurrera egiteko.",
+            "gdprConsentRequest": "Zure baimen esplizitua behar dut zure eskaerak prozesatzeko. GDPR betetzeko xedez:\n\n✅ Hau biltzen dut: Eskaeren ordu-markak, prozesatzeko denborak eta hizkuntza-hobespenak\n❌ Ez dut gordetzen: Irudiak, informazio pertsonala edo zure argitalpenen edukia\n\nBaimena emateko, erantzun \"Yes\" edo \"I agree\"\nBaimena edozein unetan ezeztatzeko, blokeatu kontu hau besterik ez.\n\nGure pribatutasun-politika osoa: https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md",
+            "gdprConsentConfirmation": "Eskerrik asko! Zure baimena erregistratu da. Orain zure eskaerak prozesatuko ditut gure pribatutasun-politikaren arabera. Baimena edozein unetan ezezta dezakezu kontu hau blokeatuz.",
+            "gdprWelcomeMessage": "Ongi etorri! Hemen nago zure irudientzako alt-testuak sortzeko, irisgarritasuna hobetzeko. Jarraitu aurretik:",
+            "imageAlreadyHasAltText": "Irudi honek badu alt-testua dagoeneko",
+            "unsupportedFile": "Fitxategi hau ez da onartzen; soilik irudiak, bideoak eta audio-fitxategiak onartzen dira gaur egun",
+            "providedByMessage": "@%s-ek emana, %s erabiliz sortua",
+            "providedByMessageLocal": "@%s-ek emana, %s erabiliz pribatuan eta lokalean sortua",
+            "altTextReminder": "Kaixo @%s, mesedez gehitu alt-testua zure irudiei zure argitalpena editatuz. Iruzkinetan dagoen alt-testua ez da erraz iristen pantaila-irakurgailuetara! Mila esker!",
+            "energyUsageMessage": "🌱 Erabilitako energia: %.3f Wh"
+        }
+    },
 }
