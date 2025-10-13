@@ -228,5 +228,5 @@
             "altTextReminder": "Kaixo @%s, mesedez gehitu alt-testua zure irudiei zure argitalpena editatuz. Iruzkinetan dagoen alt-testua ez da erraz iristen pantaila-irakurgailuetara! Mila esker!",
             "energyUsageMessage": "🌱 Erabilitako energia: %.3f Wh"
         }
-    },
+    }
 }
