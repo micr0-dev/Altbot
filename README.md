@@ -117,6 +117,14 @@ Altbot listens for mentions and follows on Mastodon. When it detects a mention o
 
 We welcome contributions! Please open an issue or submit a pull request with your improvements.
 
+## Support / Community
+
+Questions? Want to chat? Join us at [chat.micr0.dev](https://chat.micr0.dev)
+
+Channels: #dev for project discussion, #help for support
+
+IRC: irc.micr0.dev (ports 6667/6697)
+
 ## Thank You
 
 ### Special Thanks
