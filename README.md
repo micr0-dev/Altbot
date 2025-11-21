@@ -7,7 +7,7 @@ _Making the Fediverse more inclusive, one image at a time_
 
 [![Latest Release](https://img.shields.io/github/v/release/micr0-dev/Altbot)](https://github.com/micr0-dev/Altbot/releases)
 [![Mastodon Follow](https://img.shields.io/mastodon/follow/113183205946060973?domain=fuzzies.wtf&style=social)](https://fuzzies.wtf/@altbot)
-[![License: OWL v2.0](https://img.shields.io/badge/License-OWL%20v2.0-ff6347.svg)](https://owl-license.org/)
+[![License: AGPLv3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/micr0-dev/Altbot)](https://go.dev/)
 ![Status](https://img.shields.io/badge/status-active-success)
 ![Environment](https://img.shields.io/badge/environment-friendly-green)
@@ -129,7 +129,7 @@ A heartfelt thank you to all my [Ko-fi](https://ko-fi.com/) supporters! Your gen
 
 ## License
 
-This project is licensed under the [OVERWORKED LICENSE (OWL) v2.0.](https://owl-license.org/) See the [LICENSE](LICENSE) file for details.
+This project is licensed under the [GNU AFFERO GENERAL PUBLIC LICENSE Version 3 (AGPLv3).](https://www.gnu.org/licenses/agpl-3.0.en.html) See the [LICENSE](LICENSE) file for details.
 
 ---
 

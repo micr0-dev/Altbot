@@ -6,7 +6,7 @@ _Version 1.0 - Effective March 14, 2025_
 
 The name "Altbot" and the Altbot logo are unregistered trademarks of Micr0Byte (micr0@micr0.dev). This policy outlines acceptable uses of the Altbot name and brand.
 
-Note: This trademark policy is separate from the OWL license that governs the Altbot code. The code remains open source, while this policy protects the Altbot brand identity.
+Note: This trademark policy is separate from the AGPLv3 license that governs the Altbot code. The code remains open source, while this policy protects the Altbot brand identity.
 
 ## Acceptable Uses
 
