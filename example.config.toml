@@ -82,10 +82,14 @@ override_field_count = false # Set to true to remove the 4 feild limit, if using
 fields = ["made-by", "version", "model", "source", "donate"]
 
 [api]
-enabled = true
+enabled = false
 port = 8081                           # Different from dashboard port
 monthly_limit = 5000                  # Images per month per key
 kofi_verification_token = ""          # Get this from Ko-fi webhook settings (leave empty to disable webhook)
+kofi_shop_item_code = "a2d4aabd54"
+kofi_tier_name = "Altbot Unlimited API Key"
+postmark_token = "arskayuthluahtulhfwtuwfht"
+postmark_from_email = "api@altbot.micr0.dev"
 
 [metrics]
 enabled = true # Set to false to completely disable all metrics collection and logging

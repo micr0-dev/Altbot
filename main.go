@@ -45,7 +45,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.3"
+const Version = "2.3.1"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
@@ -119,6 +119,10 @@ type Config struct {
 		Port                  int    `toml:"port"`
 		MonthlyLimit          int    `toml:"monthly_limit"`
 		KofiVerificationToken string `toml:"kofi_verification_token"`
+		KofiShopItemCode      string `toml:"kofi_shop_item_code"`
+		KofiTierName          string `toml:"kofi_tier_name"`
+		PostmarkToken         string `toml:"postmark_token"`
+		PostmarkFromEmail     string `toml:"postmark_from_email"`
 	} `toml:"api"`
 	Metrics struct {
 		Enabled          bool `toml:"enabled"`
