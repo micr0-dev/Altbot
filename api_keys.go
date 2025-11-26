@@ -24,7 +24,7 @@ type APIKey struct {
 	UsageMonth int       `json:"usage_month"`
 	LastReset  time.Time `json:"last_reset"`
 	Active     bool      `json:"active"`
-	Note       string    `json:"note,omitempty"` // Optional note (e.g., "Ko-fi purchase", "webhook auto-generated")
+	Note       string    `json:"note,omitempty"`
 }
 
 // APIKeyStore manages all API keys
@@ -44,10 +44,8 @@ func InitAPIKeyStore(filePath string) error {
 		filePath: filePath,
 	}
 
-	// Load existing keys from file
 	if err := apiKeyStore.LoadFromFile(); err != nil {
 		if os.IsNotExist(err) {
-			// File doesn't exist, that's okay - start fresh
 			fmt.Println("No API keys file found. Starting fresh.")
 			return apiKeyStore.SaveToFile()
 		}
@@ -71,22 +69,24 @@ func (store *APIKeyStore) LoadFromFile() error {
 	return json.Unmarshal(data, &store.Keys)
 }
 
-// SaveToFile saves API keys to the JSON file
+// SaveToFile saves API keys to the JSON file (acquires lock)
 func (store *APIKeyStore) SaveToFile() error {
 	store.mu.Lock()
 	defer store.mu.Unlock()
+	return store.saveToFileUnlocked()
+}
 
+// saveToFileUnlocked saves without acquiring lock (caller must hold lock)
+func (store *APIKeyStore) saveToFileUnlocked() error {
 	data, err := json.MarshalIndent(store.Keys, "", "  ")
 	if err != nil {
 		return err
 	}
-
 	return os.WriteFile(store.filePath, data, 0644)
 }
 
 // GenerateAPIKey creates a new API key for a user
 func GenerateAPIKey(email string, durationDays int, note string) (*APIKey, error) {
-	// Generate a secure random key
 	keyBytes := make([]byte, 32)
 	if _, err := rand.Read(keyBytes); err != nil {
 		return nil, fmt.Errorf("failed to generate random key: %v", err)
@@ -108,9 +108,10 @@ func GenerateAPIKey(email string, durationDays int, note string) (*APIKey, error
 
 	apiKeyStore.mu.Lock()
 	apiKeyStore.Keys[keyString] = apiKey
+	err := apiKeyStore.saveToFileUnlocked()
 	apiKeyStore.mu.Unlock()
 
-	if err := apiKeyStore.SaveToFile(); err != nil {
+	if err != nil {
 		return nil, fmt.Errorf("failed to save API key: %v", err)
 	}
 
@@ -122,6 +123,15 @@ func ValidateAPIKey(key string) (*APIKey, error) {
 	apiKeyStore.mu.RLock()
 	apiKey, exists := apiKeyStore.Keys[key]
 	apiKeyStore.mu.RUnlock()
+
+	// If key not found in memory, try reloading from file
+	if !exists {
+		if err := apiKeyStore.LoadFromFile(); err == nil {
+			apiKeyStore.mu.RLock()
+			apiKey, exists = apiKeyStore.Keys[key]
+			apiKeyStore.mu.RUnlock()
+		}
+	}
 
 	if !exists {
 		return nil, fmt.Errorf("invalid API key")
@@ -155,17 +165,19 @@ func CheckAndIncrementUsage(key string, monthlyLimit int) error {
 		apiKey.LastReset = now
 	}
 
-	// Check monthly limit
 	if apiKey.UsageMonth >= monthlyLimit {
 		return fmt.Errorf("monthly usage limit exceeded (%d/%d)", apiKey.UsageMonth, monthlyLimit)
 	}
 
-	// Increment usage
 	apiKey.UsageMonth++
 
-	// Save periodically (every 10 requests to avoid too much disk I/O)
+	// Save periodically (every 10 requests)
 	if apiKey.UsageMonth%10 == 0 {
-		go apiKeyStore.SaveToFile()
+		go func() {
+			apiKeyStore.mu.Lock()
+			apiKeyStore.saveToFileUnlocked()
+			apiKeyStore.mu.Unlock()
+		}()
 	}
 
 	return nil
@@ -201,7 +213,7 @@ func RevokeAPIKey(key string) error {
 
 	apiKey.Active = false
 
-	return apiKeyStore.SaveToFile()
+	return apiKeyStore.saveToFileUnlocked()
 }
 
 // ExtendAPIKey extends the expiration of an existing key
@@ -223,7 +235,7 @@ func ExtendAPIKey(key string, additionalDays int) error {
 
 	apiKey.Active = true
 
-	return apiKeyStore.SaveToFile()
+	return apiKeyStore.saveToFileUnlocked() // Use unlocked version!
 }
 
 // ListAPIKeys returns all API keys (for admin purposes)
@@ -269,7 +281,7 @@ func CleanupExpiredKeys() int {
 	}
 
 	if removed > 0 {
-		apiKeyStore.SaveToFile()
+		apiKeyStore.saveToFileUnlocked()
 	}
 
 	return removed
