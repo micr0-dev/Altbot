@@ -87,19 +87,19 @@ GET /api/v1/health
 
 ```bash
 # Generate alt-text
-curl -X POST https://api.altbot.example.com/api/v1/alt-text \
+curl -X POST https://altbot.micr0.dev/api/v1/alt-text \
   -H "Authorization: Bearer altbot_your_key_here" \
   -F "image=@photo.jpg"
 
 # With language
-curl -X POST https://api.altbot.example.com/api/v1/alt-text \
+curl -X POST https://altbot.micr0.dev/api/v1/alt-text \
   -H "Authorization: Bearer altbot_your_key_here" \
   -F "image=@photo.jpg" \
   -F "language=de"
 
 # Check usage
 curl -H "Authorization: Bearer altbot_your_key_here" \
-  https://api.altbot.example.com/api/v1/usage
+  https://altbot.micr0.dev/api/v1/usage
 ```
 
 ### Python
@@ -108,7 +108,7 @@ curl -H "Authorization: Bearer altbot_your_key_here" \
 import requests
 
 API_KEY = "altbot_your_key_here"
-API_URL = "https://api.altbot.example.com"
+API_URL = "https://altbot.micr0.dev"
 
 def generate_alt_text(image_path, language="en"):
     with open(image_path, "rb") as f:
@@ -137,7 +137,7 @@ const FormData = require('form-data');
 const fetch = require('node-fetch');
 
 const API_KEY = 'altbot_your_key_here';
-const API_URL = 'https://api.altbot.example.com';
+const API_URL = 'https://altbot.micr0.dev';
 
 async function generateAltText(imagePath, language = 'en') {
   const form = new FormData();
@@ -176,7 +176,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 
 API_KEY = "altbot_your_key_here"
-API_URL = "https://api.altbot.example.com"
+API_URL = "https://altbot.micr0.dev"
 
 def process_image(image_path):
     """Process a single image and return (path, alt_text) or (path, error)"""
@@ -251,5 +251,4 @@ with open("alt_texts.json", "w") as f:
 ## Support
 
 Having issues? Reach out:
-- Mastodon: [@altbot@fuzzies.wtf](https://fuzzies.wtf/@altbot)
 - GitHub: [Issues](https://github.com/micr0-dev/Altbot/issues)
