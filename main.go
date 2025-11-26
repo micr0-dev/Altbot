@@ -45,7 +45,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.2"
+const Version = "2.3"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
@@ -114,6 +114,12 @@ type Config struct {
 		MessageTemplate string   `toml:"message_template"`
 		Tips            []string `toml:"tips"`
 	} `toml:"weekly_summary"`
+	API struct {
+		Enabled               bool   `toml:"enabled"`
+		Port                  int    `toml:"port"`
+		MonthlyLimit          int    `toml:"monthly_limit"`
+		KofiVerificationToken string `toml:"kofi_verification_token"`
+	} `toml:"api"`
 	Metrics struct {
 		Enabled          bool `toml:"enabled"`
 		DashboardEnabled bool `toml:"dashboard_enabled"`
@@ -183,7 +189,15 @@ const (
 
 func main() {
 	setupFlag := flag.Bool("setup", false, "Run the setup wizard")
+	adminCmd := flag.Bool("admin", false, "Run admin command")
 	flag.Parse()
+
+	// Handle admin commands and exit
+	if *adminCmd {
+		args := flag.Args()
+		RunAdminCommand(args)
+		return
+	}
 
 	// Load default configuration from example.config.toml
 	if _, err := toml.DecodeFile("example.config.toml", &defaultConfig); err != nil {
@@ -399,6 +413,15 @@ func main() {
 	} else {
 		fmt.Printf("%s Metrics Dashboard: %v\n", getStatusSymbol(false), config.Metrics.DashboardEnabled)
 	}
+
+	if config.API.Enabled {
+		if err := InitAPIKeyStore("api_keys.json"); err != nil {
+			log.Fatalf("Error initializing API key store: %v", err)
+		}
+		StartAPIServer(config.API.Port, config.API.MonthlyLimit)
+	}
+
+	fmt.Printf("%s Public API: %v\n", getStatusSymbol(config.API.Enabled), config.API.Enabled)
 
 	// Display power metrics status if using a local model
 	if config.LLM.Provider != "gemini" {

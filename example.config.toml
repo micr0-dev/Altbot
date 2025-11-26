@@ -81,6 +81,12 @@ override_field_count = false # Set to true to remove the 4 feild limit, if using
 # Available fields: "version", "model", "source", "donate", "made-by"
 fields = ["made-by", "version", "model", "source", "donate"]
 
+[api]
+enabled = true
+port = 8081                           # Different from dashboard port
+monthly_limit = 5000                  # Images per month per key
+kofi_verification_token = ""          # Get this from Ko-fi webhook settings (leave empty to disable webhook)
+
 [metrics]
 enabled = true # Set to false to completely disable all metrics collection and logging
 dashboard_enabled = true # Set to false to disable the metrics dashboard
