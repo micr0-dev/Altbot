@@ -206,7 +206,7 @@ func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format
 	}
 
 	// Prepare the Ollama command
-	cmd := exec.Command("ollama", "run", p.model, "--keepalive", p.keepAlive, fmt.Sprintf("%s %s", prompt, tmpFile.Name()))
+	cmd := exec.Command("ollama", "run", p.model, "--hidethinking", "--keepalive", p.keepAlive, fmt.Sprintf("%s %s", prompt, tmpFile.Name()))
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
