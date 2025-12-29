@@ -185,10 +185,10 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 	responseText := strings.ToLower(plainTextContent)
 	consent := false
 
-	// Check for various affirmative responses
-	affirmativeResponses := []string{"yes", "y", "agree", "i agree", "consent", "i consent", "ok", "okay"}
+	// Check for various affirmative responses (must be whole words, not substrings)
+	affirmativeResponses := []string{"yes", "agree", "i agree", "consent", "i consent", "ok", "okay", "ja", "oui", "si"}
 	for _, response := range affirmativeResponses {
-		if containsWord(responseText, response) {
+		if containsWholeWord(responseText, response) {
 			consent = true
 			break
 		}
@@ -249,19 +249,43 @@ func HandleBlockEvent(userID string) {
 	}
 }
 
-// containsWord checks if a string contains a specific word
+// containsWord checks if a string contains a specific substring
 func containsWord(text, word string) bool {
-	for i := 0; i <= len(text)-len(word); i++ {
-		match := true
-		for j := 0; j < len(word); j++ {
-			if i+j >= len(text) || text[i+j] != word[j] {
-				match = false
-				break
-			}
+	return strings.Contains(text, word)
+}
+
+// containsWholeWord checks if a string contains a specific word as a whole word (not as a substring)
+// e.g., "yes" matches "yes" or "yes!" but not "eyes" or "yesterday"
+func containsWholeWord(text, word string) bool {
+	// Handle exact match
+	if text == word {
+		return true
+	}
+
+	// Check for word at various positions with word boundaries
+	wordLen := len(word)
+	textLen := len(text)
+
+	for i := 0; i <= textLen-wordLen; i++ {
+		// Check if substring matches
+		if text[i:i+wordLen] != word {
+			continue
 		}
-		if match {
+
+		// Check left boundary (start of string or non-letter)
+		leftOk := i == 0 || !isLetter(text[i-1])
+
+		// Check right boundary (end of string or non-letter)
+		rightOk := i+wordLen == textLen || !isLetter(text[i+wordLen])
+
+		if leftOk && rightOk {
 			return true
 		}
 	}
 	return false
+}
+
+// isLetter checks if a byte is a letter (a-z, A-Z)
+func isLetter(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
 }
