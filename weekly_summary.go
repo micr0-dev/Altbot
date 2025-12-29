@@ -58,6 +58,15 @@ func GenerateWeeklySummary(c *mastodon.Client, ctx context.Context) {
 	message = strings.ReplaceAll(message, "{{tip_of_the_week}}", tipOfTheWeek)
 	message = strings.ReplaceAll(message, "{{leaderboard}}", leaderboard)
 
+	// Dev mode: print to terminal instead of posting
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Would post weekly summary]%s\n", Yellow, Reset)
+		fmt.Printf("  Visibility: public\n")
+		fmt.Printf("  Content:\n%s\n", message)
+		fmt.Println("---")
+		return
+	}
+
 	// Post the summary
 	post, err := c.PostStatus(ctx, &mastodon.Toot{
 		Status:     message,
