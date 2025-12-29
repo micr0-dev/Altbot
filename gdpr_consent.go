@@ -32,6 +32,20 @@ type ConsentRecord struct {
 
 var consentDB ConsentDatabase
 
+// PendingGDPRRequest tracks a pending GDPR consent request for a user
+// This is used to handle platforms like PixelFed that send DMs without InReplyToID
+type PendingGDPRRequest struct {
+	UserID          string        `json:"user_id"`
+	RequestStatusID mastodon.ID   `json:"request_status_id"`
+	Timestamp       time.Time     `json:"timestamp"`
+}
+
+var pendingGDPRRequests = make(map[string]PendingGDPRRequest) // key: userID
+var pendingGDPRMutex sync.Mutex
+
+const pendingGDPRRequestsFile = "pending_gdpr_requests.json"
+const pendingGDPRExpirationDays = 30
+
 // InitializeConsentDatabase initializes the consent database
 func InitializeConsentDatabase() error {
 	consentDB.Users = make(map[string]ConsentRecord)
@@ -104,6 +118,130 @@ func RemoveUserConsent(userID string) error {
 	return saveConsentDatabase("consent_database.json")
 }
 
+// --- Pending GDPR Request Functions (for PixelFed and similar platforms) ---
+
+// InitializePendingGDPRRequests loads pending requests from disk
+func InitializePendingGDPRRequests() error {
+	pendingGDPRMutex.Lock()
+	defer pendingGDPRMutex.Unlock()
+
+	data, err := os.ReadFile(pendingGDPRRequestsFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// File doesn't exist, that's okay
+			return nil
+		}
+		return err
+	}
+
+	if err := json.Unmarshal(data, &pendingGDPRRequests); err != nil {
+		return err
+	}
+
+	// Clean up expired requests on load
+	now := time.Now()
+	for userID, req := range pendingGDPRRequests {
+		if now.Sub(req.Timestamp).Hours() > float64(pendingGDPRExpirationDays*24) {
+			delete(pendingGDPRRequests, userID)
+		}
+	}
+
+	if len(pendingGDPRRequests) > 0 {
+		fmt.Printf("Loaded %d pending GDPR requests\n", len(pendingGDPRRequests))
+	}
+	return nil
+}
+
+// savePendingGDPRRequests saves pending requests to disk
+func savePendingGDPRRequests() error {
+	pendingGDPRMutex.Lock()
+	defer pendingGDPRMutex.Unlock()
+
+	data, err := json.MarshalIndent(pendingGDPRRequests, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(pendingGDPRRequestsFile, data, 0644)
+}
+
+// AddPendingGDPRRequest adds a pending GDPR consent request for a user
+func AddPendingGDPRRequest(userID string, requestStatusID mastodon.ID) {
+	pendingGDPRMutex.Lock()
+	pendingGDPRRequests[userID] = PendingGDPRRequest{
+		UserID:          userID,
+		RequestStatusID: requestStatusID,
+		Timestamp:       time.Now(),
+	}
+	pendingGDPRMutex.Unlock()
+
+	if err := savePendingGDPRRequests(); err != nil {
+		log.Printf("Error saving pending GDPR requests: %v", err)
+	}
+}
+
+// GetPendingGDPRRequest returns a pending GDPR request for a user, or nil if none exists
+func GetPendingGDPRRequest(userID string) *PendingGDPRRequest {
+	pendingGDPRMutex.Lock()
+	defer pendingGDPRMutex.Unlock()
+
+	req, exists := pendingGDPRRequests[userID]
+	if !exists {
+		return nil
+	}
+
+	// Check if expired
+	if time.Since(req.Timestamp).Hours() > float64(pendingGDPRExpirationDays*24) {
+		delete(pendingGDPRRequests, userID)
+		return nil
+	}
+
+	return &req
+}
+
+// RemovePendingGDPRRequest removes a pending GDPR request for a user
+func RemovePendingGDPRRequest(userID string) {
+	pendingGDPRMutex.Lock()
+	delete(pendingGDPRRequests, userID)
+	pendingGDPRMutex.Unlock()
+
+	if err := savePendingGDPRRequests(); err != nil {
+		log.Printf("Error saving pending GDPR requests: %v", err)
+	}
+}
+
+// CleanupExpiredGDPRRequests removes pending requests older than the expiration period
+func CleanupExpiredGDPRRequests() {
+	pendingGDPRMutex.Lock()
+	defer pendingGDPRMutex.Unlock()
+
+	now := time.Now()
+	removed := 0
+	for userID, req := range pendingGDPRRequests {
+		if now.Sub(req.Timestamp).Hours() > float64(pendingGDPRExpirationDays*24) {
+			delete(pendingGDPRRequests, userID)
+			removed++
+		}
+	}
+
+	if removed > 0 {
+		log.Printf("Cleaned up %d expired GDPR requests", removed)
+		if err := savePendingGDPRRequests(); err != nil {
+			log.Printf("Error saving pending GDPR requests: %v", err)
+		}
+	}
+}
+
+// StartGDPRCleanupRoutine starts a background routine to clean up expired requests
+func StartGDPRCleanupRoutine() {
+	go func() {
+		ticker := time.NewTicker(24 * time.Hour)
+		for range ticker.C {
+			CleanupExpiredGDPRRequests()
+		}
+	}()
+}
+
 // RequestGDPRConsent sends a consent request message to a user
 func RequestGDPRConsent(c *mastodon.Client, userID string, username string, language string, replyToID mastodon.ID, isStandaloneMsg bool) (mastodon.ID, error) {
 	// Always use English for GDPR messages for now, regardless of user language
@@ -141,27 +279,43 @@ func RequestGDPRConsent(c *mastodon.Client, userID string, username string, lang
 		return "", err
 	}
 
+	// Track this pending request (for PixelFed and other platforms that don't use reply threading)
+	AddPendingGDPRRequest(userID, status.ID)
+
 	log.Printf("Sent GDPR consent request to %s", username)
 	return status.ID, nil
 }
 
 // HandleGDPRConsentResponse processes a user's response to a consent request
 func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool {
-	// Check if inreplyto is a consent request
-	originalStatus := status.InReplyToID
-	if originalStatus == nil {
-		return false
+	userID := string(status.Account.ID)
+
+	// Case 1: Reply-based response (standard Mastodon flow)
+	if status.InReplyToID != nil {
+		return handleReplyBasedConsent(c, status, userID)
 	}
 
+	// Case 2: Non-reply DM (PixelFed and similar platforms)
+	// These platforms send DMs as new messages without InReplyToID
+	if status.Visibility == "direct" {
+		return handleNonReplyConsent(c, status, userID)
+	}
+
+	return false
+}
+
+// handleReplyBasedConsent handles consent responses that are replies to the original request
+func handleReplyBasedConsent(c *mastodon.Client, status *mastodon.Status, userID string) bool {
 	var originalStatusID mastodon.ID
 
-	switch id := originalStatus.(type) {
+	switch id := status.InReplyToID.(type) {
 	case string:
 		originalStatusID = mastodon.ID(id)
 	case mastodon.ID:
 		originalStatusID = id
 	default:
-		log.Printf("Unexpected type for InReplyToID: %T", originalStatus)
+		log.Printf("Unexpected type for InReplyToID: %T", status.InReplyToID)
+		return false
 	}
 
 	parentStatus, err := c.GetStatus(ctx, originalStatusID)
@@ -170,11 +324,43 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 		return false
 	}
 
-	// Check if the parent status is a consent request
+	// Check if the parent status is a consent request (contains privacy policy link)
 	if !containsWord(stripHTMLTags(parentStatus.Content), "https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md") {
 		return false
 	}
 
+	// Check for affirmative response
+	if checkAndRecordConsent(c, status, userID) {
+		// Remove from pending requests if present
+		RemovePendingGDPRRequest(userID)
+		return true
+	}
+
+	return false
+}
+
+// handleNonReplyConsent handles consent responses from platforms like PixelFed
+// that send DMs as new messages without InReplyToID
+func handleNonReplyConsent(c *mastodon.Client, status *mastodon.Status, userID string) bool {
+	// Check if this user has a pending GDPR consent request
+	pendingRequest := GetPendingGDPRRequest(userID)
+	if pendingRequest == nil {
+		return false
+	}
+
+	// User has a pending request - check for affirmative response
+	if checkAndRecordConsent(c, status, userID) {
+		// Remove the pending request
+		RemovePendingGDPRRequest(userID)
+		log.Printf("Accepted GDPR consent from %s via non-reply DM (PixelFed flow)", status.Account.Acct)
+		return true
+	}
+
+	return false
+}
+
+// checkAndRecordConsent checks for affirmative response and records consent if found
+func checkAndRecordConsent(c *mastodon.Client, status *mastodon.Status, userID string) bool {
 	// Clean up HTML content to extract plain text
 	plainTextContent := stripHTMLTags(status.Content)
 	if plainTextContent == "" {
@@ -183,10 +369,10 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 
 	// Convert to lowercase and check for affirmative responses
 	responseText := strings.ToLower(plainTextContent)
-	consent := false
 
 	// Check for various affirmative responses (must be whole words, not substrings)
 	affirmativeResponses := []string{"yes", "agree", "i agree", "consent", "i consent", "ok", "okay", "ja", "oui", "si"}
+	consent := false
 	for _, response := range affirmativeResponses {
 		if containsWholeWord(responseText, response) {
 			consent = true
@@ -194,47 +380,51 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 		}
 	}
 
-	if consent {
-		// Record the user's consent
-		err := RecordUserConsent(string(status.Account.ID), "explicit")
-		if err != nil {
-			log.Printf("Error recording consent for user %s: %v", status.Account.Acct, err)
-			return false
-		}
-
-		log.Printf("User %s provided explicit consent", status.Account.Acct)
-
-		// Always use English for GDPR messages
-		consentLanguage := "en"
-
-		// Send confirmation message
-		confirmationMsg := fmt.Sprintf("@%s %s", status.Account.Acct, getLocalizedString(consentLanguage, "gdprConsentConfirmation", "response"))
-
-		// Dev mode: print to terminal instead of posting
-		if devMode {
-			fmt.Printf("\n%s[DEV MODE - Would post GDPR consent confirmation]%s\n", Yellow, Reset)
-			fmt.Printf("  To: @%s\n", status.Account.Acct)
-			fmt.Printf("  Visibility: direct\n")
-			fmt.Printf("  Content: %s\n", confirmationMsg)
-			fmt.Println("---")
-			return true
-		}
-
-		_, err = c.PostStatus(ctx, &mastodon.Toot{
-			Status:      confirmationMsg,
-			InReplyToID: status.ID,
-			Visibility:  "direct",
-			Language:    status.Language, // Keep original language for message metadata
-		})
-
-		if err != nil {
-			log.Printf("Error sending consent confirmation: %v", err)
-		}
-
-		return true
+	if !consent {
+		return false
 	}
 
-	return false
+	// Record the user's consent
+	err := RecordUserConsent(userID, "explicit")
+	if err != nil {
+		log.Printf("Error recording consent for user %s: %v", status.Account.Acct, err)
+		return false
+	}
+
+	log.Printf("User %s provided explicit consent", status.Account.Acct)
+
+	// Send confirmation message
+	sendConsentConfirmation(c, status)
+
+	return true
+}
+
+// sendConsentConfirmation sends a confirmation message to the user
+func sendConsentConfirmation(c *mastodon.Client, status *mastodon.Status) {
+	// Always use English for GDPR messages
+	consentLanguage := "en"
+	confirmationMsg := fmt.Sprintf("@%s %s", status.Account.Acct, getLocalizedString(consentLanguage, "gdprConsentConfirmation", "response"))
+
+	// Dev mode: print to terminal instead of posting
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Would post GDPR consent confirmation]%s\n", Yellow, Reset)
+		fmt.Printf("  To: @%s\n", status.Account.Acct)
+		fmt.Printf("  Visibility: direct\n")
+		fmt.Printf("  Content: %s\n", confirmationMsg)
+		fmt.Println("---")
+		return
+	}
+
+	_, err := c.PostStatus(ctx, &mastodon.Toot{
+		Status:      confirmationMsg,
+		InReplyToID: status.ID,
+		Visibility:  "direct",
+		Language:    status.Language,
+	})
+
+	if err != nil {
+		log.Printf("Error sending consent confirmation: %v", err)
+	}
 }
 
 // Handle user blocking events (consent revocation)
