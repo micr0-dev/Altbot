@@ -45,7 +45,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.4"
+const Version = "2.5"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
@@ -62,12 +62,14 @@ type Config struct {
 		Username       string `toml:"username"`
 	} `toml:"server"`
 	LLM struct {
-		Provider            string `toml:"provider"`
-		OllamaModel         string `toml:"ollama_model"`
-		OllamaKeepAlive     string `toml:"ollama_keep_alive"`
-		UseTranslationLayer bool   `toml:"use_translation_layer"`
-		PromptAddition      string `toml:"prompt_additional_instructions"`
-		PromptOverride      string `toml:"prompt_override"`
+		Provider                   string `toml:"provider"`
+		OllamaModel                string `toml:"ollama_model"`
+		OllamaKeepAlive            string `toml:"ollama_keep_alive"`
+		OllamaTranslationModel     string `toml:"ollama_translation_model"`
+		OllamaTranslationKeepAlive string `toml:"ollama_translation_keep_alive"`
+		UseTranslationLayer        bool   `toml:"use_translation_layer"`
+		PromptAddition             string `toml:"prompt_additional_instructions"`
+		PromptOverride             string `toml:"prompt_override"`
 	} `toml:"llm"`
 	TransformersServerArgs struct {
 		Port       int     `toml:"port"`

@@ -75,7 +75,16 @@ func (t *TranslationLayer) translateText(prompt string) (string, error) {
 
 // translateWithOllama translates text using Ollama
 func (t *TranslationLayer) translateWithOllama(provider *OllamaProvider, prompt string) (string, error) {
-	cmd := exec.Command("ollama", "run", provider.model, "--keepalive", provider.keepAlive, prompt)
+	// Use translation model if configured, otherwise fall back to main model
+	model := provider.model
+	keepAlive := provider.keepAlive
+
+	if provider.translationModel != "" {
+		model = provider.translationModel
+		keepAlive = provider.translationKeepAlive
+	}
+
+	cmd := exec.Command("ollama", "run", model, "--keepalive", keepAlive, prompt)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
