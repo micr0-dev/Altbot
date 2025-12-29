@@ -430,6 +430,14 @@ func main() {
 		log.Fatalf("Error initializing GDPR consent database: %v", err)
 	}
 
+	// Initialize pending GDPR requests (for PixelFed and similar platforms)
+	if err := InitializePendingGDPRRequests(); err != nil {
+		log.Printf("Warning: Error loading pending GDPR requests: %v", err)
+	}
+
+	// Start cleanup routine for expired GDPR requests
+	StartGDPRCleanupRoutine()
+
 	fmt.Printf("%s Legacy Consent System: %v\n", getStatusSymbol(config.Behavior.AskForConsent), config.Behavior.AskForConsent)
 
 	// Start metrics manager
