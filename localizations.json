@@ -3,7 +3,9 @@
         "prompts": {
             "generateAltText": "Generate an alt-text description, which is a description for people who can't see the image. Be sure to talk about the actual contents of it, do not interpret or assume anything. Start with a general description, then focus on the details. If the image is complex or has many different elements, please try to summarize it in around 5 sentences. If there is any text, state it verbatim. Do not assume genders. Write your alt-text on the next line:",
             "generateVideoAltText": "Generate an alt-text description, which is a description for people who can't hear or see this video. Be sure to say the actual exact contents of the video, do not interpret or assume anything. Include details about the audio and video. If something is said, transcribe it word for word. If there is any text, state it verbatim. Do not assume genders. Write your alt-text on the next line:",
-            "generateAudioAltText": "Generate an alt-text description, which is a description for people who can't hear this audio. Be sure to say the actual exact contents of the audio, do not interpret or assume anything. If something is said, transcribe it word for word. Do not assume genders. Write your alt-text on the next line:"
+            "generateAudioAltText": "Generate an alt-text description, which is a description for people who can't hear this audio. Be sure to say the actual exact contents of the audio, do not interpret or assume anything. If something is said, transcribe it word for word. Do not assume genders. Write your alt-text on the next line:",
+            "contextQuestionPrompt": "Look at this image and generate 2-3 brief, thoughtful questions to ask the person who posted it. Ask about: what this image means to them, why they are sharing it, or any relevant personal context that would help create a more meaningful description. Format as a simple numbered list. Be conversational and friendly.",
+            "contextAltTextPrompt": "Generate an alt-text description for this image. The person who posted it shared this context about why they're posting it and what it means to them: \"%s\". Use their personal context to make the description more meaningful and relevant, while still accurately describing what's visible in the image. Do not assume genders. Write your alt-text on the next line:"
         },
         "responses": {
             "altTextError": "Sorry, I couldn't process this image.",
@@ -16,7 +18,9 @@
             "providedByMessage": "Provided by @%s, generated using %s",
             "providedByMessageLocal": "Provided by @%s, generated privately and locally using %s",
             "altTextReminder": "Hi @%s, please add alt-text to your images by editing your post. Alt-text in the comments isn't easily accessible to screenreaders! Thank you!",
-            "energyUsageMessage": "🌱 Energy used: %.3f Wh"
+            "energyUsageMessage": "🌱 Energy used: %.3f Wh",
+            "contextRequestMessage": "I'd like to understand your image better to create more meaningful alt-text. Could you help me by answering a few questions?\n\n%s\n\nReply with your answers and I'll create a personalized description that captures what this image means to you.",
+            "experimentalAdminNotification": "Experimental two-step alt-text was triggered for @%s on post %s"
         }
     },
     "ru": {

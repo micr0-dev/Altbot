@@ -23,6 +23,8 @@ import (
 type LLMProvider interface {
 	GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error)
 	GenerateVideoAltText(prompt string, videoData []byte, format string, targetLanguage string) (string, error)
+	GenerateContextQuestions(imageData []byte, format string, lang string) (string, error)
+	GenerateAltTextWithContext(prompt string, imageData []byte, format string, userContext string, lang string) (string, error)
 	Close() error
 }
 
@@ -215,6 +217,49 @@ func (p *GeminiProvider) generateContent(parts []*genai.Part) (*genai.GenerateCo
 	return p.client.Models.GenerateContent(ctx, p.modelName, contents, cloneGenerateContentConfig(p.generationConfig))
 }
 
+func (p *GeminiProvider) GenerateContextQuestions(imageData []byte, format string, lang string) (string, error) {
+	mimeType, err := inferImageMIME(format)
+	if err != nil {
+		return "", err
+	}
+
+	prompt := getLocalizedString(lang, "contextQuestionPrompt", "prompt")
+
+	parts := []*genai.Part{
+		{Text: prompt},
+		{InlineData: &genai.Blob{Data: imageData, MIMEType: mimeType}},
+	}
+
+	resp, err := p.generateContent(parts)
+	if err != nil {
+		return "", err
+	}
+
+	return getResponse(resp), nil
+}
+
+func (p *GeminiProvider) GenerateAltTextWithContext(prompt string, imageData []byte, format string, userContext string, lang string) (string, error) {
+	mimeType, err := inferImageMIME(format)
+	if err != nil {
+		return "", err
+	}
+
+	// Build the prompt with user context
+	contextPrompt := fmt.Sprintf(getLocalizedString(lang, "contextAltTextPrompt", "prompt"), userContext)
+
+	parts := []*genai.Part{
+		{Text: contextPrompt},
+		{InlineData: &genai.Blob{Data: imageData, MIMEType: mimeType}},
+	}
+
+	resp, err := p.generateContent(parts)
+	if err != nil {
+		return "", err
+	}
+
+	return getResponse(resp), nil
+}
+
 func (p *OllamaProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
 	if config.LLM.UseTranslationLayer && targetLanguage != "en" {
 		// Use translation layer
@@ -254,6 +299,67 @@ func (p *OllamaProvider) GenerateVideoAltText(prompt string, videoData []byte, f
 	// Ollama currently doesn't support video processing directly
 	// You could extract frames and process as images, or return an error
 	return "", fmt.Errorf("video processing not supported by Ollama provider")
+}
+
+func (p *OllamaProvider) GenerateContextQuestions(imageData []byte, format string, lang string) (string, error) {
+	// Create a temporary file for the image
+	tmpFile, err := os.CreateTemp("", "image.*."+format)
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.Write(imageData); err != nil {
+		return "", err
+	}
+	if err := tmpFile.Close(); err != nil {
+		return "", err
+	}
+
+	prompt := getLocalizedString(lang, "contextQuestionPrompt", "prompt")
+
+	cmd := exec.Command("ollama", "run", p.model, "--hidethinking", "--keepalive", p.keepAlive, fmt.Sprintf("%s %s", prompt, tmpFile.Name()))
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	err = cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return out.String(), nil
+}
+
+func (p *OllamaProvider) GenerateAltTextWithContext(prompt string, imageData []byte, format string, userContext string, lang string) (string, error) {
+	// Create a temporary file for the image
+	tmpFile, err := os.CreateTemp("", "image.*."+format)
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.Write(imageData); err != nil {
+		return "", err
+	}
+	if err := tmpFile.Close(); err != nil {
+		return "", err
+	}
+
+	// Build the prompt with user context
+	contextPrompt := fmt.Sprintf(getLocalizedString(lang, "contextAltTextPrompt", "prompt"), userContext)
+
+	cmd := exec.Command("ollama", "run", p.model, "--hidethinking", "--keepalive", p.keepAlive, fmt.Sprintf("%s %s", contextPrompt, tmpFile.Name()))
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	err = cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return out.String(), nil
 }
 
 func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
@@ -419,6 +525,153 @@ func (p *TransformersProvider) GenerateVideoAltText(prompt string, videoData []b
 	}
 
 	// Parse JSON response
+	var result struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", fmt.Errorf("error parsing JSON response: %s", string(body))
+	}
+
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("no choices in response: %s", string(body))
+	}
+
+	return result.Choices[0].Message.Content, nil
+}
+
+func (p *TransformersProvider) GenerateContextQuestions(imageData []byte, format string, lang string) (string, error) {
+	// Convert image to base64
+	base64Image := base64.StdEncoding.EncodeToString(imageData)
+
+	prompt := getLocalizedString(lang, "contextQuestionPrompt", "prompt")
+
+	// Prepare the request payload
+	payload := map[string]interface{}{
+		"model": p.Model,
+		"messages": []map[string]interface{}{
+			{
+				"role": "user",
+				"content": []map[string]interface{}{
+					{
+						"type": "text",
+						"text": prompt,
+					},
+					{
+						"type": "image_url",
+						"image_url": map[string]interface{}{
+							"url": fmt.Sprintf("data:image/%s;base64,%s", format, base64Image),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("error marshaling JSON: %v", err)
+	}
+
+	fullURL := fmt.Sprintf("%s/v1/chat/completions", p.ServerURL)
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	resp, err := client.Post(fullURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("error making request to server: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var result struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", fmt.Errorf("error parsing JSON response: %s", string(body))
+	}
+
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("no choices in response: %s", string(body))
+	}
+
+	return result.Choices[0].Message.Content, nil
+}
+
+func (p *TransformersProvider) GenerateAltTextWithContext(prompt string, imageData []byte, format string, userContext string, lang string) (string, error) {
+	// Convert image to base64
+	base64Image := base64.StdEncoding.EncodeToString(imageData)
+
+	// Build the prompt with user context
+	contextPrompt := fmt.Sprintf(getLocalizedString(lang, "contextAltTextPrompt", "prompt"), userContext)
+
+	// Prepare the request payload
+	payload := map[string]interface{}{
+		"model": p.Model,
+		"messages": []map[string]interface{}{
+			{
+				"role": "user",
+				"content": []map[string]interface{}{
+					{
+						"type": "text",
+						"text": contextPrompt,
+					},
+					{
+						"type": "image_url",
+						"image_url": map[string]interface{}{
+							"url": fmt.Sprintf("data:image/%s;base64,%s", format, base64Image),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("error marshaling JSON: %v", err)
+	}
+
+	fullURL := fmt.Sprintf("%s/v1/chat/completions", p.ServerURL)
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	resp, err := client.Post(fullURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("error making request to server: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(body))
+	}
+
 	var result struct {
 		Choices []struct {
 			Message struct {

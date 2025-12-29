@@ -154,6 +154,11 @@ type Config struct {
 		OverrideFeildCount bool     `toml:"override_field_count"`
 		Fields             []string `toml:"fields"`
 	} `toml:"profile"`
+	Experimental struct {
+		TwoStepEnabled    bool     `toml:"two_step_enabled"`
+		TwoStepPercentage int      `toml:"two_step_percentage"`
+		TwoStepLanguages  []string `toml:"two_step_languages"`
+	} `toml:"experimental"`
 }
 
 const (
@@ -423,6 +428,12 @@ func main() {
 		}
 	}()
 
+	// Initialize context requests for experimental two-step alt-text
+	if err := InitializeContextRequests(); err != nil {
+		log.Printf("Warning: Error loading context requests: %v", err)
+	}
+	StartContextRequestCleanupRoutine()
+
 	fmt.Printf("%s GDPR Consent System: ", getStatusSymbol(true))
 
 	// Initialize GDPR consent database
@@ -466,6 +477,15 @@ func main() {
 	if config.LLM.Provider != "gemini" {
 		powerMetricsStatus := fmt.Sprintf("%v (%.1f watts)", config.PowerMetrics.Enabled, config.PowerMetrics.GPUWatts)
 		fmt.Printf("%s Power Consumption Metrics: %s\n", getStatusSymbol(config.PowerMetrics.Enabled), powerMetricsStatus)
+	}
+
+	// Display experimental two-step alt-text status
+	if config.Experimental.TwoStepEnabled {
+		langs := strings.Join(config.Experimental.TwoStepLanguages, ", ")
+		fmt.Printf("%s Experimental Two-Step Alt-Text: %d%% (%s)\n",
+			getStatusSymbol(true), config.Experimental.TwoStepPercentage, langs)
+	} else {
+		fmt.Printf("%s Experimental Two-Step Alt-Text: Disabled\n", getStatusSymbol(false))
 	}
 
 	fmt.Println("\n-----------------------------------")
@@ -520,6 +540,9 @@ func main() {
 					// Check if this is a response to a consent request
 					if _, isConsentRequest := consentRequests[grandparentStatusID]; isConsentRequest {
 						handleConsentResponse(c, grandparentStatusID, e.Notification.Status)
+					} else if contextReq := GetContextRequestByParent(parentStatusID); contextReq != nil {
+						// Check if this is a response to a context request (experimental two-step alt-text)
+						handleContextResponse(c, e.Notification.Status, contextReq)
 					} else {
 						// Check if this might be a GDPR consent response
 						isGDPRConsent := HandleGDPRConsentResponse(c, e.Notification.Status)
@@ -828,6 +851,18 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 		return
 	}
 
+	// Check for experimental two-step mode (only for images)
+	// Always triggers for admin account for testing purposes
+	if shouldUseExperimentalModeForUser(replyPost.Language, replyPost.Account.Acct) {
+		// Find first image attachment without alt-text
+		for _, attachment := range status.MediaAttachments {
+			if attachment.Type == "image" && attachment.Description == "" {
+				initiateContextRequest(c, status, replyPost, attachment)
+				return // Exit after initiating context request
+			}
+		}
+	}
+
 	metricsManager.logRequest(string(replyPost.Account.ID))
 
 	var wg sync.WaitGroup
@@ -1021,6 +1056,233 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 			mapMutex.Unlock()
 		}
 	}
+}
+
+// initiateContextRequest starts the two-step alt-text process by asking the user questions
+func initiateContextRequest(c *mastodon.Client, originalStatus *mastodon.Status, replyPost *mastodon.Status, attachment mastodon.Attachment) {
+	log.Printf("Initiating experimental two-step alt-text for @%s", replyPost.Account.Acct)
+
+	// Download and process the image to generate questions
+	resp, err := http.Get(attachment.URL)
+	if err != nil {
+		log.Printf("Error fetching image for context questions: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	imgData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading image data: %v", err)
+		return
+	}
+
+	// Downscale the image
+	downscaledImg, format, err := downscaleImage(imgData, config.ImageProcessing.DownscaleWidth)
+	if err != nil {
+		log.Printf("Error downscaling image: %v", err)
+		return
+	}
+
+	// Generate context questions using the LLM
+	questions, err := llmProvider.GenerateContextQuestions(downscaledImg, format, replyPost.Language)
+	if err != nil {
+		log.Printf("Error generating context questions: %v", err)
+		// Fall back to regular alt-text generation
+		generateAndPostAltTextFallback(c, originalStatus, replyPost.ID)
+		return
+	}
+
+	// Format the message with the questions
+	message := fmt.Sprintf("@%s %s",
+		replyPost.Account.Acct,
+		fmt.Sprintf(getLocalizedString(replyPost.Language, "contextRequestMessage", "response"), questions))
+
+	// Prepare visibility
+	visibility := replyPost.Visibility
+	if visibility == "public" {
+		visibility = "unlisted" // Don't spam public timeline with questions
+	}
+
+	// Dev mode: print to terminal instead of posting
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Would post context questions (EXPERIMENTAL)]%s\n", Yellow, Reset)
+		fmt.Printf("  To: @%s\n", replyPost.Account.Acct)
+		fmt.Printf("  Visibility: %s\n", visibility)
+		fmt.Printf("  Content: %s\n", message)
+		fmt.Println("---")
+		return
+	}
+
+	// Post the questions
+	questionStatus, err := c.PostStatus(ctx, &mastodon.Toot{
+		Status:      message,
+		InReplyToID: replyPost.ID,
+		Visibility:  visibility,
+		Language:    replyPost.Language,
+	})
+	if err != nil {
+		log.Printf("Error posting context questions: %v", err)
+		return
+	}
+
+	// Store the context request for later
+	AddContextRequest(questionStatus.ID, ContextRequest{
+		RequestStatusID:  questionStatus.ID,
+		OriginalStatusID: originalStatus.ID,
+		UserID:           string(replyPost.Account.ID),
+		Username:         replyPost.Account.Acct,
+		ImageURL:         attachment.URL,
+		ImageFormat:      format,
+		Language:         replyPost.Language,
+		Timestamp:        time.Now(),
+		ReplyToID:        replyPost.ID,
+	})
+
+	// Notify admin
+	notifyAdminExperimentalUsed(c, replyPost.Account.Acct, originalStatus.ID)
+
+	log.Printf("Sent context questions to @%s for experimental two-step alt-text", replyPost.Account.Acct)
+}
+
+// generateAndPostAltTextFallback is used when experimental mode fails and we need to fall back
+func generateAndPostAltTextFallback(c *mastodon.Client, status *mastodon.Status, replyToID mastodon.ID) {
+	// This bypasses the experimental check by going directly to normal flow
+	replyPost, err := c.GetStatus(ctx, replyToID)
+	if err != nil {
+		log.Printf("Error fetching reply status in fallback: %v", err)
+		return
+	}
+
+	metricsManager.logRequest(string(replyPost.Account.ID))
+
+	// Process normally - simplified version that just generates alt-text for the first image
+	for _, attachment := range status.MediaAttachments {
+		if attachment.Type == "image" && attachment.Description == "" {
+			altText, err := generateImageAltText(attachment.URL, replyPost.Language)
+			if err != nil {
+				log.Printf("Error generating alt-text in fallback: %v", err)
+				return
+			}
+
+			response := fmt.Sprintf("@%s %s\n\n%s",
+				replyPost.Account.Acct,
+				altText,
+				getProviderAttribution(config, replyPost.Language))
+
+			visibility := replyPost.Visibility
+			if visibility == "private" {
+				visibility = "direct"
+			}
+
+			if devMode {
+				fmt.Printf("\n%s[DEV MODE - Would post fallback alt-text]%s\n", Yellow, Reset)
+				fmt.Printf("  Content: %s\n", response)
+				return
+			}
+
+			_, err = c.PostStatus(ctx, &mastodon.Toot{
+				Status:      response,
+				InReplyToID: replyToID,
+				Visibility:  visibility,
+				Language:    replyPost.Language,
+			})
+			if err != nil {
+				log.Printf("Error posting fallback alt-text: %v", err)
+			}
+			return
+		}
+	}
+}
+
+// handleContextResponse processes the user's answers to context questions
+func handleContextResponse(c *mastodon.Client, responseStatus *mastodon.Status, contextReq *ContextRequest) {
+	log.Printf("Received context response from @%s for experimental alt-text", responseStatus.Account.Acct)
+
+	// Verify the response is from the same user who was asked
+	if string(responseStatus.Account.ID) != contextReq.UserID {
+		log.Printf("Context response from wrong user: expected %s, got %s",
+			contextReq.UserID, responseStatus.Account.ID)
+		return
+	}
+
+	// Extract the user's answers from the response
+	userContext := stripHTMLTags(responseStatus.Content)
+
+	// Download and process the image again
+	resp, err := http.Get(contextReq.ImageURL)
+	if err != nil {
+		log.Printf("Error fetching image for context alt-text: %v", err)
+		RemoveContextRequest(contextReq.RequestStatusID)
+		return
+	}
+	defer resp.Body.Close()
+
+	imgData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading image data: %v", err)
+		RemoveContextRequest(contextReq.RequestStatusID)
+		return
+	}
+
+	// Downscale the image
+	downscaledImg, format, err := downscaleImage(imgData, config.ImageProcessing.DownscaleWidth)
+	if err != nil {
+		log.Printf("Error downscaling image: %v", err)
+		RemoveContextRequest(contextReq.RequestStatusID)
+		return
+	}
+
+	// Generate alt-text with the user's context
+	prompt := getLocalizedString(contextReq.Language, "contextAltTextPrompt", "prompt")
+	altText, err := llmProvider.GenerateAltTextWithContext(prompt, downscaledImg, format, userContext, contextReq.Language)
+	if err != nil {
+		log.Printf("Error generating context-aware alt-text: %v", err)
+		RemoveContextRequest(contextReq.RequestStatusID)
+		return
+	}
+
+	altText = postProcessAltText(altText)
+
+	// Prepare the response
+	response := fmt.Sprintf("@%s %s\n\n%s",
+		contextReq.Username,
+		altText,
+		getProviderAttribution(config, contextReq.Language))
+
+	// Determine visibility
+	visibility := responseStatus.Visibility
+	if visibility == "private" {
+		visibility = "direct"
+	}
+
+	// Dev mode: print to terminal instead of posting
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Would post context-aware alt-text (EXPERIMENTAL)]%s\n", Yellow, Reset)
+		fmt.Printf("  To: @%s\n", contextReq.Username)
+		fmt.Printf("  Visibility: %s\n", visibility)
+		fmt.Printf("  User Context: %s\n", userContext)
+		fmt.Printf("  Content: %s\n", response)
+		fmt.Println("---")
+		RemoveContextRequest(contextReq.RequestStatusID)
+		return
+	}
+
+	// Post the alt-text
+	_, err = c.PostStatus(ctx, &mastodon.Toot{
+		Status:      response,
+		InReplyToID: responseStatus.ID,
+		Visibility:  visibility,
+		Language:    contextReq.Language,
+	})
+	if err != nil {
+		log.Printf("Error posting context-aware alt-text: %v", err)
+	} else {
+		log.Printf("Successfully posted context-aware alt-text for @%s", contextReq.Username)
+		LogEvent("experimental_alt_text_generated")
+	}
+
+	// Clean up the context request
+	RemoveContextRequest(contextReq.RequestStatusID)
 }
 
 // downloadToTempFile downloads a file from a given URL and saves it to a temporary file.

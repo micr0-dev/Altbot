@@ -165,3 +165,9 @@ tips = [
     "Altbot is great for generating alt-texts quickly, but human-written alt-texts are often more accurate and detailed.",
     "Altbot is a great tool for generating alt-texts, but it's always good to review and edit the output for accuracy.",
 ]
+
+[experimental]
+# Two-step alt-text: Ask users about their image before generating alt-text
+two_step_enabled = false           # Enable/disable the experimental two-step feature
+two_step_percentage = 10           # Percentage of requests that trigger the two-step flow (0-100)
+two_step_languages = ["en"]        # Languages to enable the feature for
