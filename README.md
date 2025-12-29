@@ -43,6 +43,7 @@ Altbot listens for mentions and follows on Mastodon. When it detects a mention o
 - **Mention-Based Alt-Text Generation:** Mention @Altbot in a reply to any post containing an image, video, or audio, and Altbot will generate an alt-text description for it.
 - **Automatic Alt-Text for Followers:** Follow @Altbot, and it will monitor your posts. If you post an image, video, or audio without alt-text, Altbot will automatically generate one for you.
 - **Local LLM Support:** Use local LLMs via Ollama for generating alt-text descriptions.
+- **Dual-Model Translation:** Optionally use a separate, smaller model for translation (e.g., use a large vision model for alt-text and a fast text model for translation).
 - **GDPR Compliance:** Explicit informed consent system that requires users to provide consent before processing their requests, with clear information about data usage.
 - **Consent Requests:** Ask for consent from the original poster before generating alt-text when mentioned by non-OP users.
 - **Configurable Settings:** Easily configure the bot using a TOML file.
