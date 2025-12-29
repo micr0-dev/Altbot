@@ -117,6 +117,17 @@ func RequestGDPRConsent(c *mastodon.Client, userID string, username string, lang
 	} else {
 		message = fmt.Sprintf("@%s %s", username, getLocalizedString(consentLanguage, "gdprConsentRequest", "response"))
 	}
+
+	// Dev mode: print to terminal instead of posting
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Would post GDPR consent request]%s\n", Yellow, Reset)
+		fmt.Printf("  To: @%s\n", username)
+		fmt.Printf("  Visibility: direct\n")
+		fmt.Printf("  Content: %s\n", message)
+		fmt.Println("---")
+		return "", nil
+	}
+
 	// Post the consent request
 	status, err := c.PostStatus(ctx, &mastodon.Toot{
 		Status:      message,
@@ -198,6 +209,16 @@ func HandleGDPRConsentResponse(c *mastodon.Client, status *mastodon.Status) bool
 
 		// Send confirmation message
 		confirmationMsg := fmt.Sprintf("@%s %s", status.Account.Acct, getLocalizedString(consentLanguage, "gdprConsentConfirmation", "response"))
+
+		// Dev mode: print to terminal instead of posting
+		if devMode {
+			fmt.Printf("\n%s[DEV MODE - Would post GDPR consent confirmation]%s\n", Yellow, Reset)
+			fmt.Printf("  To: @%s\n", status.Account.Acct)
+			fmt.Printf("  Visibility: direct\n")
+			fmt.Printf("  Content: %s\n", confirmationMsg)
+			fmt.Println("---")
+			return true
+		}
 
 		_, err = c.PostStatus(ctx, &mastodon.Toot{
 			Status:      confirmationMsg,

@@ -43,6 +43,7 @@ Altbot listens for mentions and follows on Mastodon. When it detects a mention o
 - **Mention-Based Alt-Text Generation:** Mention @Altbot in a reply to any post containing an image, video, or audio, and Altbot will generate an alt-text description for it.
 - **Automatic Alt-Text for Followers:** Follow @Altbot, and it will monitor your posts. If you post an image, video, or audio without alt-text, Altbot will automatically generate one for you.
 - **Local LLM Support:** Use local LLMs via Ollama for generating alt-text descriptions.
+- **Dual-Model Translation:** Optionally use a separate, smaller model for translation (e.g., use a large vision model for alt-text and a fast text model for translation).
 - **GDPR Compliance:** Explicit informed consent system that requires users to provide consent before processing their requests, with clear information about data usage.
 - **Consent Requests:** Ask for consent from the original poster before generating alt-text when mentioned by non-OP users.
 - **Configurable Settings:** Easily configure the bot using a TOML file.
@@ -112,6 +113,85 @@ Altbot listens for mentions and follows on Mastodon. When it detects a mention o
    ```sh
    docker compose up -d
    ```
+
+## Development Setup
+
+### Prerequisites
+
+- **Go 1.24+**: Install from [go.dev](https://go.dev/dl/)
+- **LLM Provider** (one of the following):
+  - **Gemini API**: Get an API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+  - **Ollama**: Install from [ollama.ai](https://ollama.ai/) and pull a vision model (e.g., `ollama pull llava-phi3`)
+  - **Transformers**: Requires Python with transformers library and a compatible GPU
+- **Mastodon Account**: Create a bot account on a Mastodon instance and generate API credentials
+
+### Getting Started
+
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/micr0-dev/Altbot.git
+   cd Altbot
+   ```
+
+2. Install dependencies:
+   ```sh
+   go mod download
+   ```
+
+3. Copy and configure the config file:
+   ```sh
+   cp example.config.toml config.toml
+   # Edit config.toml with your credentials
+   ```
+
+4. Run the bot:
+   ```sh
+   go run .
+   ```
+
+### Development Mode
+
+Use the `--dev` flag to run the bot in development mode. This provides an interactive command-line interface for testing without posting to Mastodon:
+
+```sh
+go run . --dev
+```
+
+**Note:** Dev mode skips Mastodon authentication, but you still need a valid LLM API key (Gemini, Ollama, etc.) configured in `config.toml` to test image/video/audio processing.
+
+#### Dev Mode Commands
+
+| Command | Description |
+|---------|-------------|
+| `/image <url>` | Process an image URL and generate alt-text |
+| `/video <url>` | Process a video URL and generate alt-text |
+| `/audio <url>` | Process an audio URL and generate alt-text |
+| `/lang [code]` | Set/show language for responses (e.g., en, de, ja) |
+| `/follow` | Simulate a follow event |
+| `/status` | Show current dev mode status |
+| `/help` | Show available commands |
+| `/quit` | Exit dev mode |
+
+You can also paste a URL directly to process it as an image.
+
+**Example session:**
+```
+[dev] > /lang de
+Language set to: de
+
+[dev] > https://example.com/image.jpg
+Processing image: https://example.com/image.jpg
+Please wait...
+
+=== Generated Alt-Text ===
+Ein Foto von...
+```
+
+### Building
+
+```sh
+go build -o altbot .
+```
 
 ## Contributing
 

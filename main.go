@@ -191,10 +191,15 @@ const (
 	creator   = "@micr0@wetdry.world"
 )
 
+var devMode bool
+
 func main() {
 	setupFlag := flag.Bool("setup", false, "Run the setup wizard")
 	adminCmd := flag.Bool("admin", false, "Run admin command")
+	devFlag := flag.Bool("dev", false, "Run in development mode (print to terminal instead of posting)")
 	flag.Parse()
+
+	devMode = *devFlag
 
 	// Handle admin commands and exit
 	if *adminCmd {
@@ -210,15 +215,23 @@ func main() {
 
 	// Check if config.toml exists, if not, create it by copying example.config.toml
 	if _, err := os.Stat("config.toml"); os.IsNotExist(err) {
-		if err := copyConfig("example.config.toml", "config.toml", 5); err != nil {
-			log.Fatalf("Error creating default config.toml: %v", err)
-		}
+		if devMode {
+			// In dev mode, use example.config.toml directly without running setup wizard
+			log.Println("config.toml not found. Using example.config.toml for dev mode...")
+			if err := copyConfig("example.config.toml", "config.toml", 5); err != nil {
+				log.Fatalf("Error creating default config.toml: %v", err)
+			}
+		} else {
+			if err := copyConfig("example.config.toml", "config.toml", 5); err != nil {
+				log.Fatalf("Error creating default config.toml: %v", err)
+			}
 
-		log.Println("config.toml not found. Running setup wizard...")
-		*setupFlag = true
+			log.Println("config.toml not found. Running setup wizard...")
+			*setupFlag = true
+		}
 	}
 
-	if *setupFlag {
+	if *setupFlag && !devMode {
 		runSetupWizard("config.toml")
 	}
 
@@ -230,7 +243,7 @@ func main() {
 	// Compare config with defaultConfig and print warnings or custom settings
 	customSettingsCount := compareConfigs(defaultConfig, config)
 
-	if config.Server.MastodonServer == "https://mastodon.example.com" {
+	if config.Server.MastodonServer == "https://mastodon.example.com" && !devMode {
 		log.Fatal("Please configure the Mastodon server in config.toml")
 	}
 	var err error
@@ -276,11 +289,50 @@ func main() {
 	// Print the version and art
 	fmt.Printf("%s%s%s%s%s\n", Cyan, AsciiArt, Pink, Motto, Reset)
 	fmt.Printf("%sAltbot%s v%s (%s)\n", Cyan, Reset, Version, config.LLM.Provider)
+	if devMode {
+		fmt.Printf("%s[DEV MODE]%s Interactive testing mode - no Mastodon connection\n", Yellow, Reset)
+	}
 	checkForUpdates()
 
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithCancel(context.Background())
 	defer cancel()
+
+	// Print capabilities
+	if videoProcessingCapability {
+		fmt.Printf("%s Video Processing: %v\n", getStatusSymbol(true), videoProcessingCapability)
+	} else {
+		fmt.Printf("%s Video Processing: Unsupported by LLM\n", getStatusSymbol(false))
+	}
+	if audioProcessingCapability {
+		fmt.Printf("%s Audio Processing: %v\n", getStatusSymbol(true), audioProcessingCapability)
+	} else {
+		fmt.Printf("%s Audio Processing: Unsupported by LLM\n", getStatusSymbol(false))
+	}
+
+	PromptAdditionState = config.LLM.PromptAddition != ""
+
+	if PromptOverrideState {
+		fmt.Printf("%s Prompt Override: Set to \"%.30s...\"\n", getStatusSymbol(true), config.LLM.PromptOverride)
+	} else if PromptAdditionState {
+		fmt.Printf("%s Prompt Additional Instructions: Set to \"%.30s...\"\n", getStatusSymbol(true), config.LLM.PromptAddition)
+	} else {
+		fmt.Printf("%s Default Prompts: %s\n", getStatusSymbol(true), "Loaded")
+	}
+
+	// Set up Gemini AI model (needed for dev mode too if using gemini)
+	err = Setup(config.Gemini.APIKey)
+	if err != nil && !devMode {
+		log.Fatal(err)
+	}
+
+	// In dev mode, skip all Mastodon-related initialization
+	if devMode {
+		fmt.Printf("%s %d Custom settings loaded\n", getStatusSymbol(customSettingsCount > 0), customSettingsCount)
+		fmt.Println("\n-----------------------------------")
+		runDevMode()
+		return
+	}
 
 	c := mastodon.NewClient(&mastodon.Config{
 		Server:       config.Server.MastodonServer,
@@ -304,33 +356,6 @@ func main() {
 		}
 	} else {
 		fmt.Printf("%s Dynamic Profile Fields: %s\n", getStatusSymbol(false), "Disabled")
-	}
-
-	if videoProcessingCapability {
-		fmt.Printf("%s Video Processing: %v\n", getStatusSymbol(true), videoProcessingCapability)
-	} else {
-		fmt.Printf("%s Video Processing: Unsupported by LLM\n", getStatusSymbol(false))
-	}
-	if audioProcessingCapability {
-		fmt.Printf("%s Audio Processing: %v\n", getStatusSymbol(true), audioProcessingCapability)
-	} else {
-		fmt.Printf("%s Audio Processing: Unsupported by LLM\n", getStatusSymbol(false))
-	}
-
-	PromptAdditionState = config.LLM.PromptAddition != ""
-
-	if PromptOverrideState {
-		fmt.Printf("%s Prompt Override: Set to \"%.30s...\"\n", getStatusSymbol(true), config.LLM.PromptOverride)
-	} else if PromptAdditionState {
-		fmt.Printf("%s Prompt Additional Instructions: Set to \"%.30s...\"\n", getStatusSymbol(true), config.LLM.PromptAddition)
-	} else {
-		fmt.Printf("%s Default Prompts: %s\n", getStatusSymbol(true), "Loaded")
-	}
-
-	// Set up Gemini AI model
-	err = Setup(config.Gemini.APIKey)
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	// Connect to Mastodon streaming API
@@ -633,6 +658,17 @@ func requestConsent(c *mastodon.Client, status *mastodon.Status, notification *m
 	}
 
 	message := fmt.Sprintf("@%s "+getLocalizedString(notification.Status.Language, "consentRequest", "response"), status.Account.Acct, notification.Account.Acct)
+
+	// Dev mode: print to terminal instead of posting
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Would post consent request]%s\n", Yellow, Reset)
+		fmt.Printf("  To: @%s\n", status.Account.Acct)
+		fmt.Printf("  Visibility: %s\n", status.Visibility)
+		fmt.Printf("  Content: %s\n", message)
+		fmt.Println("---")
+		return
+	}
+
 	_, err := c.PostStatus(ctx, &mastodon.Toot{
 		Status:      message,
 		InReplyToID: status.ID,
@@ -929,6 +965,19 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 
 		if replyPost.Visibility == "private" {
 			visibility = "direct"
+		}
+
+		// Dev mode: print to terminal instead of posting
+		if devMode {
+			fmt.Printf("\n%s[DEV MODE - Would post reply]%s\n", Yellow, Reset)
+			fmt.Printf("  To: @%s\n", replyPost.Account.Acct)
+			fmt.Printf("  Visibility: %s\n", visibility)
+			if contentWarning != "" {
+				fmt.Printf("  CW: %s\n", contentWarning)
+			}
+			fmt.Printf("  Content:\n%s\n", combinedResponse)
+			fmt.Println("---")
+			return
 		}
 
 		reply, err := c.PostStatus(ctx, &mastodon.Toot{
@@ -1561,6 +1610,17 @@ func (rl *RateLimiter) notifyAdmin(c *mastodon.Client, userID string) {
 	name := account.Acct
 
 	message := fmt.Sprintf("%s User %s has been shadow banned for exceeding rate limits.\nTo unban, reply with 'unban %s'.", config.RateLimit.AdminContactHandle, name, userID)
+
+	// Dev mode: print to terminal instead of posting
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Would notify admin]%s\n", Yellow, Reset)
+		fmt.Printf("  To: %s\n", config.RateLimit.AdminContactHandle)
+		fmt.Printf("  Visibility: direct\n")
+		fmt.Printf("  Content: %s\n", message)
+		fmt.Println("---")
+		return
+	}
+
 	_, err = c.PostStatus(ctx, &mastodon.Toot{
 		Status:     message,
 		Visibility: "direct",
@@ -1594,8 +1654,21 @@ func handleAdminReply(c *mastodon.Client, reply *mastodon.Status, rl *RateLimite
 		rl.UnbanAndWhitelistUser(userID)
 		log.Printf("Admin unbanned user %s based on reply.", userID)
 		metricsManager.logUnBan(string(userID))
+
+		message := fmt.Sprintf("%s User %s has been unbanned and added to the whitelist.", config.RateLimit.AdminContactHandle, userID)
+
+		// Dev mode: print to terminal instead of posting
+		if devMode {
+			fmt.Printf("\n%s[DEV MODE - Would confirm unban]%s\n", Yellow, Reset)
+			fmt.Printf("  To: %s\n", config.RateLimit.AdminContactHandle)
+			fmt.Printf("  Visibility: direct\n")
+			fmt.Printf("  Content: %s\n", message)
+			fmt.Println("---")
+			return
+		}
+
 		_, err := c.PostStatus(ctx, &mastodon.Toot{
-			Status:      fmt.Sprintf("%s User %s has been unbanned and added to the whitelist.", config.RateLimit.AdminContactHandle, userID),
+			Status:      message,
 			Visibility:  "direct",
 			InReplyToID: reply.ID,
 		})
@@ -1879,6 +1952,16 @@ func checkAltTextPeriodically(c *mastodon.Client, interval time.Duration, checkT
 func notifyUserOfMissingAltText(c *mastodon.Client, post *mastodon.Status, userID string) {
 	message := fmt.Sprintf(getLocalizedString(post.Language, "altTextReminder", "response"), userID)
 
+	// Dev mode: print to terminal instead of posting
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Would post alt-text reminder]%s\n", Yellow, Reset)
+		fmt.Printf("  To: @%s\n", userID)
+		fmt.Printf("  Visibility: direct\n")
+		fmt.Printf("  Content: %s\n", message)
+		fmt.Println("---")
+		return
+	}
+
 	_, err := c.PostStatus(ctx, &mastodon.Toot{
 		Status:      message,
 		InReplyToID: post.ID,
@@ -2110,4 +2193,168 @@ func updateBotProfile(client *mastodon.Client, config Config) error {
 
 	fmt.Printf("%s Profile fields updated successfully\n", getStatusSymbol(true))
 	return nil
+}
+
+// runDevMode runs an interactive command loop for testing without posting to Mastodon
+func runDevMode() {
+	fmt.Println("Dev mode active. Type /help for available commands.")
+	fmt.Println()
+
+	scanner := bufio.NewScanner(os.Stdin)
+	currentLang := config.Localization.DefaultLanguage
+
+	for {
+		fmt.Printf("%s[dev]%s > ", Cyan, Reset)
+		if !scanner.Scan() {
+			break
+		}
+
+		input := strings.TrimSpace(scanner.Text())
+		if input == "" {
+			continue
+		}
+
+		parts := strings.SplitN(input, " ", 2)
+		command := strings.ToLower(parts[0])
+		var arg string
+		if len(parts) > 1 {
+			arg = strings.TrimSpace(parts[1])
+		}
+
+		switch command {
+		case "/help", "help":
+			printDevHelp()
+
+		case "/quit", "/exit", "quit", "exit":
+			fmt.Println("Exiting dev mode...")
+			return
+
+		case "/image", "image":
+			if arg == "" {
+				fmt.Printf("%sUsage:%s /image <url>\n", Yellow, Reset)
+				continue
+			}
+			processDevImage(arg, currentLang)
+
+		case "/video", "video":
+			if arg == "" {
+				fmt.Printf("%sUsage:%s /video <url>\n", Yellow, Reset)
+				continue
+			}
+			if !videoProcessingCapability {
+				fmt.Printf("%sError:%s Video processing is not supported by the current LLM provider (%s)\n", Red, Reset, config.LLM.Provider)
+				continue
+			}
+			processDevVideo(arg, currentLang)
+
+		case "/audio", "audio":
+			if arg == "" {
+				fmt.Printf("%sUsage:%s /audio <url>\n", Yellow, Reset)
+				continue
+			}
+			if !audioProcessingCapability {
+				fmt.Printf("%sError:%s Audio processing is not supported by the current LLM provider (%s)\n", Red, Reset, config.LLM.Provider)
+				continue
+			}
+			processDevAudio(arg, currentLang)
+
+		case "/lang", "lang":
+			if arg == "" {
+				fmt.Printf("Current language: %s%s%s\n", Green, currentLang, Reset)
+				fmt.Printf("%sUsage:%s /lang <code> (e.g., en, de, ja, fr)\n", Yellow, Reset)
+				continue
+			}
+			currentLang = arg
+			fmt.Printf("Language set to: %s%s%s\n", Green, currentLang, Reset)
+
+		case "/follow", "follow":
+			fmt.Printf("\n%s[DEV MODE - Simulating follow event]%s\n", Yellow, Reset)
+			fmt.Println("  A new user followed the bot.")
+			fmt.Println("  In production, this would trigger a GDPR consent request.")
+			fmt.Println("---")
+
+		case "/status", "status":
+			printDevStatus(currentLang)
+
+		default:
+			// Check if it's a URL (treat as image by default)
+			if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
+				processDevImage(input, currentLang)
+			} else {
+				fmt.Printf("%sUnknown command:%s %s (type /help for available commands)\n", Red, Reset, command)
+			}
+		}
+	}
+}
+
+func printDevHelp() {
+	fmt.Println()
+	fmt.Printf("%s=== Dev Mode Commands ===%s\n", Cyan, Reset)
+	fmt.Println()
+	fmt.Printf("  %s/image <url>%s    Process an image and generate alt-text\n", Green, Reset)
+	fmt.Printf("  %s/video <url>%s    Process a video and generate alt-text\n", Green, Reset)
+	fmt.Printf("  %s/audio <url>%s    Process an audio file and generate alt-text\n", Green, Reset)
+	fmt.Printf("  %s/lang [code]%s    Set/show language for responses (e.g., en, de, ja)\n", Green, Reset)
+	fmt.Printf("  %s/follow%s         Simulate a follow event\n", Green, Reset)
+	fmt.Printf("  %s/status%s         Show current dev mode status\n", Green, Reset)
+	fmt.Printf("  %s/help%s           Show this help message\n", Green, Reset)
+	fmt.Printf("  %s/quit%s           Exit dev mode\n", Green, Reset)
+	fmt.Println()
+	fmt.Printf("  %sTip:%s You can also paste a URL directly to process it as an image.\n", Yellow, Reset)
+	fmt.Println()
+}
+
+func printDevStatus(currentLang string) {
+	fmt.Println()
+	fmt.Printf("%s=== Dev Mode Status ===%s\n", Cyan, Reset)
+	fmt.Printf("  LLM Provider: %s\n", config.LLM.Provider)
+	fmt.Printf("  Language: %s\n", currentLang)
+	fmt.Printf("  Video Processing: %v\n", videoProcessingCapability)
+	fmt.Printf("  Audio Processing: %v\n", audioProcessingCapability)
+	fmt.Println()
+}
+
+func processDevImage(imageURL string, lang string) {
+	fmt.Printf("\n%sProcessing image:%s %s\n", Cyan, Reset, imageURL)
+	fmt.Println("Please wait...")
+
+	altText, err := generateImageAltText(imageURL, lang)
+	if err != nil {
+		fmt.Printf("%sError:%s %v\n", Red, Reset, err)
+		return
+	}
+
+	fmt.Printf("\n%s=== Generated Alt-Text ===%s\n", Green, Reset)
+	fmt.Println(altText)
+	fmt.Println()
+}
+
+func processDevVideo(videoURL string, lang string) {
+	fmt.Printf("\n%sProcessing video:%s %s\n", Cyan, Reset, videoURL)
+	fmt.Println("Please wait (this may take a while)...")
+
+	altText, err := generateVideoAltText(videoURL, lang)
+	if err != nil {
+		fmt.Printf("%sError:%s %v\n", Red, Reset, err)
+		return
+	}
+
+	fmt.Printf("\n%s=== Generated Alt-Text ===%s\n", Green, Reset)
+	fmt.Println(altText)
+	fmt.Println()
+}
+
+func processDevAudio(audioURL string, lang string) {
+	fmt.Printf("\n%sProcessing audio:%s %s\n", Cyan, Reset, audioURL)
+	fmt.Println("Please wait...")
+
+	altText, err := generateAudioAltText(audioURL, lang)
+	if err != nil {
+		fmt.Printf("%sError:%s %v\n", Red, Reset, err)
+		return
+	}
+
+	fmt.Printf("\n%s=== Generated Alt-Text ===%s\n", Green, Reset)
+	fmt.Println(altText)
+	fmt.Println()
 }
