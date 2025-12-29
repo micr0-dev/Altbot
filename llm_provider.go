@@ -35,8 +35,10 @@ type GeminiProvider struct {
 
 // OllamaProvider implements LLMProvider for Ollama
 type OllamaProvider struct {
-	model     string
-	keepAlive string
+	model                string
+	keepAlive            string
+	translationModel     string
+	translationKeepAlive string
 }
 
 // TransformersProvider implements LLMProvider for Hugging Face Transformers
@@ -113,9 +115,27 @@ func setupOllamaProvider(config Config) (*OllamaProvider, error) {
 		keepAlive = "5m" // Default to 5 minutes
 	}
 
+	// Set up translation model (defaults to main model if not specified)
+	translationModel := config.LLM.OllamaTranslationModel
+	translationKeepAlive := config.LLM.OllamaTranslationKeepAlive
+	if translationKeepAlive == "" {
+		translationKeepAlive = keepAlive // Use same keep-alive as main model
+	}
+
+	// Check if translation model is specified and available
+	if translationModel != "" && translationModel != config.LLM.OllamaModel {
+		if !bytes.Contains(output, []byte(translationModel)) {
+			return nil, fmt.Errorf("ollama translation model %s not found. Install it with: ollama pull %s",
+				translationModel, translationModel)
+		}
+		fmt.Printf("Using separate translation model: %s\n", translationModel)
+	}
+
 	provider := &OllamaProvider{
-		model:     config.LLM.OllamaModel,
-		keepAlive: keepAlive,
+		model:                config.LLM.OllamaModel,
+		keepAlive:            keepAlive,
+		translationModel:     translationModel,
+		translationKeepAlive: translationKeepAlive,
 	}
 
 	// If persistent serving is enabled, pre-load the model
@@ -126,6 +146,17 @@ func setupOllamaProvider(config Config) (*OllamaProvider, error) {
 			fmt.Printf("Warning: Failed to pre-load model: %v\n", err)
 		} else {
 			fmt.Println("Ollama model loaded and will remain in RAM")
+		}
+	}
+
+	// Pre-load translation model if different and persistent serving is enabled
+	if translationModel != "" && translationModel != config.LLM.OllamaModel && translationKeepAlive == "-1" {
+		fmt.Println("Pre-loading Ollama translation model for persistent serving...")
+		cmd := exec.Command("ollama", "run", translationModel, "--keepalive", translationKeepAlive, "echo", "Model loaded")
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Warning: Failed to pre-load translation model: %v\n", err)
+		} else {
+			fmt.Println("Ollama translation model loaded and will remain in RAM")
 		}
 	}
 

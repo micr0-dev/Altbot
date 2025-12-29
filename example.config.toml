@@ -12,8 +12,10 @@ username = "your_bot_username"                   # Your Mastodon bot's username
 [llm]
 provider = "gemini"         # can be "gemini", "ollama", or "transformers"
 ollama_model = "llava-phi3"
-ollama_keep_alive = "5m"    # Keep model loaded in RAM. Use "-1m" for persistent serving, "0m" for immediate unload, or duration like "5m". Good for active instances.
-use_translation_layer = true # Enable translation layer for local LLMs
+ollama_keep_alive = "5m"    # Keep model loaded in RAM. Use "-1" for persistent serving, "0" for immediate unload, or duration like "5m". Good for active instances.
+ollama_translation_model = "" # Optional: Use a separate model for translation (e.g., "gemma3:4b-it-q4_K_M"). Leave empty to use the same model as ollama_model.
+ollama_translation_keep_alive = "" # Keep-alive for translation model. Defaults to ollama_keep_alive if not set.
+use_translation_layer = true # Enable translation layer for local LLMs (generates alt-text in English, then translates)
 prompt_additional_instructions = "" # Additional instructions to be added to the prompt (Note: The same instructions will be added to every language)
 prompt_override = "" # WARNING: This will override the prompt making the bot only generate alt-text in one language
 
