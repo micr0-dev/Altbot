@@ -821,6 +821,7 @@ func handleUpdate(c *mastodon.Client, status *mastodon.Status) {
 }
 
 // generateAndPostAltText generates alt-text for images and posts it as a reply
+// TEMPORARILY DISABLED
 func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyToID mastodon.ID) {
 	replyPost, err := c.GetStatus(ctx, replyToID)
 	if err != nil {
@@ -828,6 +829,34 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 		return
 	}
 
+	// TEMPORARY: Altbot is disabled
+	message := fmt.Sprintf("@%s Altbot is off for now.\n\nPlease read this thread: https://ieji.de/@anantagd/115804706509841365",
+		replyPost.Account.Acct)
+
+	visibility := replyPost.Visibility
+	if visibility == "private" {
+		visibility = "direct"
+	}
+
+	if devMode {
+		fmt.Printf("\n%s[DEV MODE - Altbot disabled message]%s\n", Yellow, Reset)
+		fmt.Printf("  To: @%s\n", replyPost.Account.Acct)
+		fmt.Printf("  Content: %s\n", message)
+		return
+	}
+
+	_, err = c.PostStatus(ctx, &mastodon.Toot{
+		Status:      message,
+		InReplyToID: replyToID,
+		Visibility:  visibility,
+		Language:    replyPost.Language,
+	})
+	if err != nil {
+		log.Printf("Error posting disabled message: %v", err)
+	}
+	return
+
+	// Original code below - commented out while disabled
 	metricsManager.logRequest(string(replyPost.Account.ID))
 
 	var wg sync.WaitGroup
