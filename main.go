@@ -673,7 +673,7 @@ func requestConsent(c *mastodon.Client, status *mastodon.Status, notification *m
 	if devMode {
 		fmt.Printf("\n%s[DEV MODE - Would post consent request]%s\n", Yellow, Reset)
 		fmt.Printf("  To: @%s\n", status.Account.Acct)
-		fmt.Printf("  Visibility: %s\n", status.Visibility)
+		fmt.Printf("  Visibility: unlisted\n")
 		fmt.Printf("  Content: %s\n", message)
 		fmt.Println("---")
 		return
@@ -682,7 +682,7 @@ func requestConsent(c *mastodon.Client, status *mastodon.Status, notification *m
 	_, err := c.PostStatus(ctx, &mastodon.Toot{
 		Status:      message,
 		InReplyToID: status.ID,
-		Visibility:  status.Visibility,
+		Visibility:  "unlisted", // Don't clutter followers' timelines with consent requests
 		Language:    notification.Status.Language,
 	})
 	if err != nil {
