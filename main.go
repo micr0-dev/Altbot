@@ -472,74 +472,103 @@ func main() {
 
 	fmt.Println("Connected to streaming API. All systems operational. Waiting for mentions and follows...")
 
-	// Main event loop
-	for event := range events {
-		switch e := event.(type) {
-		case *mastodon.NotificationEvent:
-			switch e.Notification.Type {
-			case "mention": // Get the ID of the status being replied to
-				if "@"+e.Notification.Account.Acct == config.RateLimit.AdminContactHandle {
-					handleAdminReply(c, e.Notification.Status, rateLimiter)
-				}
+	// Main event loop with automatic reconnection
+	reconnectDelay := 1 * time.Second
+	maxReconnectDelay := 5 * time.Minute
 
-				if parentStatusRef := e.Notification.Status.InReplyToID; parentStatusRef != nil {
-					var parentStatusID mastodon.ID
+	for {
+		for event := range events {
+			// Reset delay on successful event
+			reconnectDelay = 1 * time.Second
 
-					// Convert the parent status ID to the correct type
-					switch typedID := parentStatusRef.(type) {
-					case string:
-						parentStatusID = mastodon.ID(typedID)
-					case mastodon.ID:
-						parentStatusID = typedID
+			switch e := event.(type) {
+			case *mastodon.NotificationEvent:
+				switch e.Notification.Type {
+				case "mention": // Get the ID of the status being replied to
+					if "@"+e.Notification.Account.Acct == config.RateLimit.AdminContactHandle {
+						handleAdminReply(c, e.Notification.Status, rateLimiter)
 					}
 
-					// Fetch the parent status
-					parentStatus, err := c.GetStatus(ctx, parentStatusID)
+					if parentStatusRef := e.Notification.Status.InReplyToID; parentStatusRef != nil {
+						var parentStatusID mastodon.ID
 
-					if parentStatus == nil {
-						log.Printf("Error fetching parent status: %v", err)
-						break
-					}
+						// Convert the parent status ID to the correct type
+						switch typedID := parentStatusRef.(type) {
+						case string:
+							parentStatusID = mastodon.ID(typedID)
+						case mastodon.ID:
+							parentStatusID = typedID
+						}
 
-					if err != nil {
-						handleMention(c, e.Notification)
-					}
+						// Fetch the parent status
+						parentStatus, err := c.GetStatus(ctx, parentStatusID)
 
-					// Get the grandparent status ID (the status that the parent was replying to)
-					grandparentStatusRef := parentStatus.InReplyToID
+						if parentStatus == nil {
+							log.Printf("Error fetching parent status: %v", err)
+							break
+						}
 
-					var grandparentStatusID mastodon.ID
-					// Convert the grandparent status ID to the correct type
-					switch typedID := grandparentStatusRef.(type) {
-					case string:
-						grandparentStatusID = mastodon.ID(typedID)
-					case mastodon.ID:
-						grandparentStatusID = typedID
-					}
-
-					// Check if this is a response to a consent request
-					if _, isConsentRequest := consentRequests[grandparentStatusID]; isConsentRequest {
-						handleConsentResponse(c, grandparentStatusID, e.Notification.Status)
-					} else {
-						// Check if this might be a GDPR consent response
-						isGDPRConsent := HandleGDPRConsentResponse(c, e.Notification.Status)
-						if !isGDPRConsent {
+						if err != nil {
 							handleMention(c, e.Notification)
 						}
+
+						// Get the grandparent status ID (the status that the parent was replying to)
+						grandparentStatusRef := parentStatus.InReplyToID
+
+						var grandparentStatusID mastodon.ID
+						// Convert the grandparent status ID to the correct type
+						switch typedID := grandparentStatusRef.(type) {
+						case string:
+							grandparentStatusID = mastodon.ID(typedID)
+						case mastodon.ID:
+							grandparentStatusID = typedID
+						}
+
+						// Check if this is a response to a consent request
+						if _, isConsentRequest := consentRequests[grandparentStatusID]; isConsentRequest {
+							handleConsentResponse(c, grandparentStatusID, e.Notification.Status)
+						} else {
+							// Check if this might be a GDPR consent response
+							isGDPRConsent := HandleGDPRConsentResponse(c, e.Notification.Status)
+							if !isGDPRConsent {
+								handleMention(c, e.Notification)
+							}
+						}
+					} else {
+						handleMention(c, e.Notification)
 					}
-				} else {
-					handleMention(c, e.Notification)
+				case "follow":
+					handleFollow(c, e.Notification)
 				}
-			case "follow":
-				handleFollow(c, e.Notification)
+			case *mastodon.UpdateEvent:
+				handleUpdate(c, e.Status)
+			case *mastodon.ErrorEvent:
+				log.Printf("Error event: %v", e.Error())
+			case *mastodon.DeleteEvent:
+				handleDeleteEvent(c, e.ID)
 			}
-		case *mastodon.UpdateEvent:
-			handleUpdate(c, e.Status)
-		case *mastodon.ErrorEvent:
-			log.Printf("Error event: %v", e.Error())
-		case *mastodon.DeleteEvent:
-			handleDeleteEvent(c, e.ID)
 		}
+
+		// If we get here, the event channel was closed (connection died)
+		log.Printf("Streaming connection lost. Reconnecting in %v...", reconnectDelay)
+		time.Sleep(reconnectDelay)
+
+		// Exponential backoff
+		reconnectDelay *= 2
+		if reconnectDelay > maxReconnectDelay {
+			reconnectDelay = maxReconnectDelay
+		}
+
+		// Reconnect
+		ws = c.NewWSClient()
+		var err error
+		events, err = ws.StreamingWSUser(ctx)
+		if err != nil {
+			log.Printf("Error reconnecting to streaming API: %v", err)
+			continue // Will retry after backoff
+		}
+
+		log.Println("Reconnected to streaming API successfully!")
 	}
 }
 
