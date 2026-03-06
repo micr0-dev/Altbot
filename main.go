@@ -477,34 +477,65 @@ func main() {
 	maxReconnectDelay := 5 * time.Minute
 	streamingTimeout := 15 * time.Minute // If no events for this long, reconnect
 
-	// Diagnostic: log streaming health periodically
+	// Shared state for watchdog (protected by mutex)
+	var lastEventTime time.Time
+	var lastEventMu sync.Mutex
+	var eventCount int
+	forceReconnect := make(chan struct{}, 1)
+
+	updateLastEventTime := func() {
+		lastEventMu.Lock()
+		lastEventTime = time.Now()
+		eventCount++
+		lastEventMu.Unlock()
+	}
+
+	getTimeSinceLastEvent := func() (time.Duration, int) {
+		lastEventMu.Lock()
+		defer lastEventMu.Unlock()
+		return time.Since(lastEventTime), eventCount
+	}
+
+	// Independent watchdog goroutine - checks every minute
 	go func() {
 		for {
-			time.Sleep(5 * time.Minute)
-			log.Printf("[STREAMING HEALTH] Goroutine alive, events channel open: %v", events != nil)
+			time.Sleep(1 * time.Minute)
+			elapsed, count := getTimeSinceLastEvent()
+			log.Printf("[WATCHDOG] %d events total, last event %v ago", count, elapsed.Round(time.Second))
+			if elapsed > streamingTimeout {
+				log.Printf("[WATCHDOG] No events for %v - forcing reconnect!", elapsed.Round(time.Second))
+				select {
+				case forceReconnect <- struct{}{}:
+				default:
+					// Already signaled
+				}
+			}
 		}
 	}()
 
 	for {
-		lastEventTime := time.Now()
-		needsReconnect := false
-		eventCount := 0
+		lastEventMu.Lock()
+		lastEventTime = time.Now()
+		eventCount = 0
+		lastEventMu.Unlock()
 
 		log.Println("[STREAMING] Starting event loop...")
 
 	eventLoop:
 		for {
 			select {
+			case <-forceReconnect:
+				log.Println("[STREAMING] Watchdog forced reconnect")
+				break eventLoop
 			case event, ok := <-events:
 				if !ok {
 					// Channel closed
-					log.Printf("[STREAMING] Channel closed after %d events", eventCount)
-					needsReconnect = true
+					_, count := getTimeSinceLastEvent()
+					log.Printf("[STREAMING] Channel closed after %d events", count)
 					break eventLoop
 				}
 
-				eventCount++
-				lastEventTime = time.Now()
+				updateLastEventTime()
 				reconnectDelay = 1 * time.Second
 
 				// Log event type for diagnostics
@@ -573,28 +604,13 @@ func main() {
 					handleUpdate(c, e.Status)
 				case *mastodon.ErrorEvent:
 					log.Printf("Error event: %v", e.Error())
-					needsReconnect = true
 					break eventLoop
 				case *mastodon.DeleteEvent:
 					handleDeleteEvent(c, e.ID)
 				}
 
-			case <-time.After(1 * time.Minute):
-				// Check if we've exceeded the timeout
-				timeSinceLastEvent := time.Since(lastEventTime)
-				log.Printf("[STREAMING] Watchdog check: %d events received, last event %v ago", eventCount, timeSinceLastEvent.Round(time.Second))
-				if timeSinceLastEvent > streamingTimeout {
-					log.Printf("[STREAMING] No events for %v, assuming connection dead. Reconnecting...", streamingTimeout)
-					needsReconnect = true
-					break eventLoop
-				}
 			}
 		}
-
-		if !needsReconnect {
-			continue
-		}
-
 		// Reconnection logic
 		log.Printf("Reconnecting in %v...", reconnectDelay)
 		time.Sleep(reconnectDelay)
