@@ -38,6 +38,11 @@ hate_speech_threshold = "none"
 sexually_explicit_threshold = "none"
 dangerous_content_threshold = "none"
 
+[openai]
+base_url = "your_custom_openai_endpoint" # Replace with your openai compatible endpoint or remove to use OpenAI
+api_key = "your_openai_key"
+model = "gpt-4o-mini"
+
 [localization]
 # Default language for the bot
 default_language = "en"

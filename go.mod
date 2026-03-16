@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/sashabaranov/go-openai v1.41.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 )
 
