@@ -1493,6 +1493,10 @@ func getResponse(resp *genai.GenerateContentResponse) string {
 
 // postProcessAltText cleans up the alt-text by removing unwanted introductory phrases.
 func postProcessAltText(altText string) string {
+	// Strip ANSI escape sequences (e.g. cursor movement codes from some LLM outputs like gemma4)
+	ansiEscape := regexp.MustCompile(`\x1b\[[0-9;]*[A-Za-z]`)
+	altText = ansiEscape.ReplaceAllString(altText, "")
+
 	// Define a regex pattern to match introductory phrases
 	// This pattern matches phrases like "Here's alt text describing the image:" or "Here's alt text for the image:"
 	pattern := `(?i)here's alt text (describing|for) the (image|video|audio):?\s*`
@@ -1502,6 +1506,17 @@ func postProcessAltText(altText string) string {
 
 	// Use the regex to replace matches with an empty string
 	altText = re.ReplaceAllString(altText, "")
+
+	// Unescape common escape sequences output by some models
+	altText = strings.NewReplacer(
+		`\"`, `"`,
+		`\'`, `'`,
+		`\t`, "\t",
+		`\r`, "",
+		`\n`, "\n",
+		`\/`, `/`,
+		`\\`, `\`,
+	).Replace(altText)
 
 	// Remove any mentions
 	altText = strings.ReplaceAll(altText, "@", "[@]")
