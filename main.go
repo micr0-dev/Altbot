@@ -183,6 +183,9 @@ var audioProcessingCapability = false
 
 var rateLimiter *RateLimiter
 
+var processingIDs = make(map[mastodon.ID]bool)
+var processingIDsMu sync.Mutex
+
 var metricsManager *MetricsManager
 
 var llmProvider LLMProvider
@@ -620,6 +623,21 @@ func handleMention(c *mastodon.Client, notification *mastodon.Notification) {
 	if len(status.MediaAttachments) == 0 {
 		return
 	}
+
+	// Skip if this status is already being processed
+	processingIDsMu.Lock()
+	if processingIDs[originalStatusID] {
+		processingIDsMu.Unlock()
+		log.Printf("Already processing status %s, skipping duplicate request", originalStatusID)
+		return
+	}
+	processingIDs[originalStatusID] = true
+	processingIDsMu.Unlock()
+	defer func() {
+		processingIDsMu.Lock()
+		delete(processingIDs, originalStatusID)
+		processingIDsMu.Unlock()
+	}()
 
 	// Check if the person who mentioned the bot is the OP
 	if status.Account.ID == notification.Account.ID {
