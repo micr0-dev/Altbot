@@ -17,6 +17,7 @@ import (
 	"time"
 
 	genai "google.golang.org/genai"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 // LLMProvider interface defines the methods that all LLM providers must implement
@@ -51,6 +52,13 @@ type TransformersProvider struct {
 	stopMonitor   chan bool
 }
 
+// OpenAIProvider implements LLMProvider for OpenAI and compatibles
+type OpenAIProvider struct {
+    client   *openai.Client
+    model    string
+    baseURL  string
+}
+
 // NewLLMProvider creates a new LLM provider based on the configuration
 func NewLLMProvider(config Config) (LLMProvider, error) {
 	switch config.LLM.Provider {
@@ -60,6 +68,8 @@ func NewLLMProvider(config Config) (LLMProvider, error) {
 		return setupOllamaProvider(config)
 	case "transformers":
 		return setupTransformersProvider(config)
+	case "openai":
+		return setupOpenAIProvider(config)
 	default:
 		return nil, fmt.Errorf("unsupported LLM provider: %s", config.LLM.Provider)
 	}
@@ -163,6 +173,38 @@ func setupOllamaProvider(config Config) (*OllamaProvider, error) {
 	return provider, nil
 }
 
+func setupOpenAIProvider(config Config) (*OpenAIProvider, error) {
+    // Validate required fields
+    if config.Openai.APIKey == "" {
+        return nil, fmt.Errorf("OpenAI API key is required for OpenAI provider")
+    }
+
+    // Create OpenAI compatible client configuration
+    openaiConfig := openai.DefaultConfig(config.Openai.APIKey)
+
+    if config.Openai.BaseURL != "" {
+        openaiConfig.BaseURL = config.Openai.BaseURL
+    } else {
+		openaiConfig.BaseURL = "https://api.openai.com/v1"
+	}
+
+	model := "gpt-4o-mini"
+    if config.Openai.Model != "" {
+        model = config.Openai.Model
+    }
+
+    // Create client
+    client := openai.NewClientWithConfig(openaiConfig)
+
+    provider := &OpenAIProvider{
+        client:   client,
+		model:    model,
+		baseURL:  openaiConfig.BaseURL,
+    }
+
+    return provider, nil
+}
+
 // GenerateAltText implementations for each provider
 func (p *GeminiProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
 	mimeType, err := inferImageMIME(format)
@@ -254,6 +296,55 @@ func (p *OllamaProvider) GenerateVideoAltText(prompt string, videoData []byte, f
 	// Ollama currently doesn't support video processing directly
 	// You could extract frames and process as images, or return an error
 	return "", fmt.Errorf("video processing not supported by Ollama provider")
+}
+
+// GenerateAltText for OpenAI compatible provider
+func (p *OpenAIProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
+    // Convert image to base64
+    base64Image := base64.StdEncoding.EncodeToString(imageData)
+
+    // Prepare messages
+    messages := []openai.ChatCompletionMessage{
+        {
+            Role: openai.ChatMessageRoleUser,
+            MultiContent: []openai.ChatMessagePart{
+                {
+                    Type: openai.ChatMessagePartTypeText,
+                    Text: prompt,
+                },
+                {
+                    Type: openai.ChatMessagePartTypeImageURL,
+                    ImageURL: &openai.ChatMessageImageURL{
+                        URL: fmt.Sprintf("data:image/%s;base64,%s", format, base64Image),
+                    },
+                },
+            },
+        },
+    }
+
+    // Create request
+    req := openai.ChatCompletionRequest{
+        Model:    p.model,
+        Messages: messages,
+    }
+
+    // Call OpenAI API
+    resp, err := p.client.CreateChatCompletion(ctx, req)
+    if err != nil {
+        return "", fmt.Errorf("error calling OpenAI API: %v", err)
+    }
+
+    if len(resp.Choices) == 0 {
+        return "", fmt.Errorf("no choices in response")
+    }
+
+    return resp.Choices[0].Message.Content, nil
+}
+
+// GenerateVideoAltText for OpenAI compatible provider
+func (p *OpenAIProvider) GenerateVideoAltText(prompt string, videoData []byte, format string, targetLanguage string) (string, error) {
+	// Depending on the backend Open AI comaptible models can support video processing directly but it's not implemented yet
+    return "", fmt.Errorf("video processing not yet supported by OpenAI compatible provider")
 }
 
 func (p *TransformersProvider) GenerateAltText(prompt string, imageData []byte, format string, targetLanguage string) (string, error) {
@@ -445,6 +536,10 @@ func (p *GeminiProvider) Close() error {
 
 func (p *OllamaProvider) Close() error {
 	return nil // Nothing to close for Ollama
+}
+
+func (p *OpenAIProvider) Close() error {
+	return nil // Nothing to close for OpenAI
 }
 
 func (p *TransformersProvider) Close() error {

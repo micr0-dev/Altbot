@@ -39,6 +39,7 @@ import (
 	"golang.org/x/text/language"
 
 	genai "google.golang.org/genai"
+	openai "github.com/sashabaranov/go-openai"
 
 	"github.com/mattn/go-mastodon"
 	"github.com/nfnt/resize"
@@ -88,6 +89,11 @@ type Config struct {
 		SexuallyExplicitThreshold string  `toml:"sexually_explicit_threshold"`
 		DangerousContentThreshold string  `toml:"dangerous_content_threshold"`
 	} `toml:"gemini"`
+	Openai struct {
+		BaseURL                   string  `toml:"base_url"`
+		Model                     string  `toml:"model"`
+		APIKey                    string  `toml:"api_key"`
+	} `toml:"openai"`
 	Localization struct {
 		DefaultLanguage string `toml:"default_language"`
 	} `toml:"localization"`
@@ -187,6 +193,9 @@ var metricsManager *MetricsManager
 
 var llmProvider LLMProvider
 
+var openaiClient *openai.Client
+var openaiModel string
+
 const (
 	sourceURL = "https://github.com/micr0-dev/Altbot"
 	donateURL = "https://ko-fi.com/micr0byte"
@@ -279,6 +288,11 @@ func main() {
 		videoProcessingCapability = true
 		audioProcessingCapability = true
 
+	case "openai":
+		// Not yet implemented
+		videoProcessingCapability = false
+		audioProcessingCapability = false
+
 	default:
 		log.Fatalf("Unsupported LLM provider: %s", config.LLM.Provider)
 	}
@@ -324,6 +338,12 @@ func main() {
 
 	// Set up Gemini AI model (needed for dev mode too if using gemini)
 	err = Setup(config.Gemini.APIKey)
+	if err != nil && !devMode {
+		log.Fatal(err)
+	}
+
+	// Set up Open AI compatible model (needed for dev mode too if using openai)
+	err = openaiSetup(config.Openai.APIKey)
 	if err != nil && !devMode {
 		log.Fatal(err)
 	}
@@ -583,6 +603,39 @@ func Setup(apiKey string) error {
 			Temperature: genai.Ptr(config.Gemini.Temperature),
 			TopK:        genai.Ptr(float32(config.Gemini.TopK)),
 		})
+	}
+
+	return nil
+}
+
+// Setup initializes the Open AI compatible endpoint with the provided API key
+func openaiSetup(apiKey string) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	if config.LLM.Provider != "openai" {
+		return nil
+	}
+
+    // Create OpenAI compatible client configuration
+    openaiConfig := openai.DefaultConfig(config.Openai.APIKey)
+
+    if config.Openai.BaseURL != "" {
+        openaiConfig.BaseURL = config.Openai.BaseURL
+    } else {
+		openaiConfig.BaseURL  = "https://api.openai.com/v1"
+	}
+
+    if config.Openai.Model != "" {
+        openaiModel = config.Openai.Model
+    } else {
+		openaiModel = "gpt-4o-mini"
+	}
+
+    // Create client
+	if openaiClient == nil {
+		openaiClient = openai.NewClientWithConfig(openaiConfig)
 	}
 
 	return nil
@@ -2158,6 +2211,11 @@ func updateBotProfile(client *mastodon.Client, config Config) error {
 				fields = append(fields, mastodon.Field{
 					Name:  "Model",
 					Value: config.Gemini.Model,
+				})
+			} else if config.LLM.Provider == "openai" {
+				fields = append(fields, mastodon.Field{
+				    Name:  "Model",
+				    Value: openaiModel,
 				})
 			}
 
