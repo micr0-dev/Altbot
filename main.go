@@ -45,7 +45,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.5"
+const Version = "2.6"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
@@ -105,9 +105,10 @@ type Config struct {
 		MaxFrames          int     `toml:"max_frames"`
 	} `toml:"video_processing"`
 	Behavior struct {
-		ReplyVisibility string `toml:"reply_visibility"`
-		FollowBack      bool   `toml:"follow_back"`
-		AskForConsent   bool   `toml:"ask_for_consent"`
+		ReplyVisibility  string `toml:"reply_visibility"`
+		FollowBack       bool   `toml:"follow_back"`
+		AskForConsent    bool   `toml:"ask_for_consent"`
+		PrivacyPolicyURL string `toml:"privacy_policy_url"`
 	} `toml:"behavior"`
 	WeeklySummary struct {
 		Enabled         bool     `toml:"enabled"`
@@ -2095,6 +2096,15 @@ func checkDifferences(d, u reflect.Value, prefix string, customCount *int, warni
 			*customCount++
 		}
 	}
+}
+
+const defaultPrivacyPolicyURL = "https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md"
+
+func getPrivacyPolicyURL() string {
+	if config.Behavior.PrivacyPolicyURL != "" {
+		return config.Behavior.PrivacyPolicyURL
+	}
+	return defaultPrivacyPolicyURL
 }
 
 func getProviderAttribution(config Config, lang string) string {
