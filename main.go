@@ -1482,9 +1482,8 @@ func getResponse(resp *genai.GenerateContentResponse) string {
 	for _, cand := range resp.Candidates {
 		if cand.Content != nil {
 			for _, part := range cand.Content.Parts {
-				if part.Text != "" {
-					response += part.Text
-				}
+				str := fmt.Sprintf("%v", part)
+				response += str
 			}
 		}
 	}
