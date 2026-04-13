@@ -923,7 +923,7 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 
 	// Add provider attribution
 	if altTextGenerated {
-		combinedResponse = fmt.Sprintf("%s\n\n%s", combinedResponse, getProviderAttribution(config, replyPost.Language))
+		combinedResponse = fmt.Sprintf("%s\n\n%s", getProviderAttribution(config, replyPost.Language), combinedResponse)
 	}
 
 	// Add power consumption information at the end if enabled and using a local model
