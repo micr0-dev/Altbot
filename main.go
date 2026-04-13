@@ -1497,6 +1497,52 @@ func postProcessAltText(altText string) string {
 	ansiEscape := regexp.MustCompile(`\x1b\[[0-9;]*[A-Za-z]`)
 	altText = ansiEscape.ReplaceAllString(altText, "")
 
+	// Fix terminal line-wrap artifacts: after ANSI stripping, some models leave a word
+	// fragment at the end of each line that duplicates the start of the next line.
+	// Also handles a quote char before the fragment being duplicated, and bare duplicate
+	// quote chars at line boundaries (e.g. `and "\n"Boost`).
+	trailingLetters := regexp.MustCompile(`[A-Za-z]+$`)
+	leadingLetters := regexp.MustCompile(`^[A-Za-z]+`)
+	lines := strings.Split(altText, "\n")
+	for i := 0; i < len(lines)-1; i++ {
+		line := lines[i]
+		nextLine := lines[i+1]
+		fragment := trailingLetters.FindString(line)
+		if fragment != "" {
+			// Check if a quote char immediately before the fragment is also duplicated
+			// at the start of the next line (e.g. `"Cryp\n"Cryptid`)
+			quotePrefix := ""
+			lineBeforeFragment := line[:len(line)-len(fragment)]
+			if len(lineBeforeFragment) > 0 {
+				last := lineBeforeFragment[len(lineBeforeFragment)-1]
+				if last == '"' || last == '\'' {
+					quotePrefix = string(last)
+				}
+			}
+			checkNext := nextLine
+			if quotePrefix != "" && strings.HasPrefix(nextLine, quotePrefix) {
+				checkNext = nextLine[len(quotePrefix):]
+			}
+			nextWord := leadingLetters.FindString(checkNext)
+			if nextWord != "" && len(fragment) <= len(nextWord) && strings.HasPrefix(nextWord, fragment) {
+				stripLen := len(quotePrefix) + len(fragment)
+				lines[i] = strings.TrimRight(line[:len(line)-stripLen], " ")
+			}
+		} else if len(line) > 0 && len(nextLine) > 0 {
+			// Handle bare duplicate quote at line boundary (e.g. `and "\n"Boost`)
+			last := line[len(line)-1]
+			if (last == '"' || last == '\'') && nextLine[0] == last {
+				lines[i] = strings.TrimRight(line[:len(line)-1], " ")
+			}
+		}
+	}
+	altText = strings.Join(lines, "\n")
+	// All remaining single newlines are artificial terminal wraps — join them into spaces.
+	// Double newlines (real paragraph breaks) are preserved.
+	altText = regexp.MustCompile(`([^\n])\n([^\n])`).ReplaceAllString(altText, "$1 $2")
+	// Collapse any double spaces produced by the join
+	altText = regexp.MustCompile(` {2,}`).ReplaceAllString(altText, " ")
+
 	// Define a regex pattern to match introductory phrases
 	// This pattern matches phrases like "Here's alt text describing the image:" or "Here's alt text for the image:"
 	pattern := `(?i)here's alt text (describing|for) the (image|video|audio):?\s*`
