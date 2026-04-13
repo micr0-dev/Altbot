@@ -325,7 +325,7 @@ func handleReplyBasedConsent(c *mastodon.Client, status *mastodon.Status, userID
 	}
 
 	// Check if the parent status is a consent request (contains privacy policy link)
-	if !containsWord(stripHTMLTags(parentStatus.Content), "https://github.com/micr0-dev/Altbot/blob/main/PRIVACY.md") {
+	if !containsWord(stripHTMLTags(parentStatus.Content), getPrivacyPolicyURL()) {
 		return false
 	}
 

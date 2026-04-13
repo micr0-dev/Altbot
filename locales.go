@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"strings"
 )
 
 // Localization holds the localized strings for different languages
@@ -54,7 +55,7 @@ func getLocalizedString(lang, key string, category string) string {
 		return prompt
 	case "response":
 		if value, ok := localization.Responses[key]; ok {
-			return value
+			return strings.ReplaceAll(value, defaultPrivacyPolicyURL, getPrivacyPolicyURL())
 		}
 	}
 	return ""

@@ -70,6 +70,8 @@ reply_visibility = "unlisted"
 follow_back = true
 # Ask for consent when mentioned by none OP users
 ask_for_consent = true
+# URL to the privacy policy (leave empty to use the default Altbot privacy policy)
+privacy_policy_url = ""
 
 [rate_limit]
 enabled = true # Enable or disable rate limiting
