@@ -1,3 +1,35 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=id">Bahasa Indonesia</a>
+        | <a href="https://openaitx.github.io/view.html?user=micr0-dev&project=Altbot&lang=as">অসমীয়া</
+      </div>
+    </div>
+  </details>
+</div>
+
 <div align="center">
   <img src="assets/micr0-alty-banner.png" alt="A decorative banner featuring a repeating pattern of small purple robot icons against a light background, creating a retro-tech wallpaper effect">
 
