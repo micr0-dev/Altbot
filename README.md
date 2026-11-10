@@ -43,6 +43,7 @@ Altbot listens for mentions and follows on Mastodon. When it detects a mention o
 - **Mention-Based Alt-Text Generation:** Mention @Altbot in a reply to any post containing an image, video, or audio, and Altbot will generate an alt-text description for it.
 - **Automatic Alt-Text for Followers:** Follow @Altbot, and it will monitor your posts. If you post an image, video, or audio without alt-text, Altbot will automatically generate one for you.
 - **Local LLM Support:** Use local LLMs via Ollama for generating alt-text descriptions.
+- **Energy and Carbon Reporting:** Each reply states the electricity used and the CO2e emitted for the generation, covering the GPU draw, the rest of the server, the data centre PUE, and the manufacturing of the hardware. See [CARBON.md](CARBON.md) for the methodology.
 - **GDPR Compliance:** Explicit informed consent system that requires users to provide consent before processing their requests, with clear information about data usage.
 - **Consent Requests:** Ask for consent from the original poster before generating alt-text when mentioned by non-OP users.
 - **Configurable Settings:** Easily configure the bot using a TOML file.
@@ -194,6 +195,21 @@ Ein Foto von...
 ```sh
 go build -o altbot .
 ```
+
+## Energy and Carbon Footprint
+
+When running a local model, Altbot can append the electricity used and the CO2e emitted to each reply:
+
+```
+🌱 Energy used: 2.288 Wh
+🌱 Carbon footprint: 1.44 gCO2e
+```
+
+The energy figure covers the whole facility: the GPU draw, the share of the rest of the server allocated to the bot, and the data centre PUE. The carbon figure adds the emissions of manufacturing the hardware, amortised over the time it is in service.
+
+The methodology and the reference values come from an independent review by [Vincent Bernstein](https://vincent.bernstein.me), climate strategy and digital sustainability consultant, published under [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The full derivation, with sources, is in [CARBON.md](CARBON.md).
+
+The carbon figures are machine and grid specific, so they are **disabled by default**: set `grid_carbon_intensity` (and optionally `pue`, `non_gpu_watts`, `embodied_carbon_gco2e_per_second`) in the `[power_metrics]` section of your config to enable them. Leaving `grid_carbon_intensity` at `0` shows the energy line only.
 
 ## Contributing
 

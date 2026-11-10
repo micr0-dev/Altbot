@@ -16,7 +16,8 @@
             "providedByMessage": "Provided by @%s, generated using %s",
             "providedByMessageLocal": "Provided by @%s, generated privately and locally using %s",
             "altTextReminder": "Hi @%s, please add alt-text to your images by editing your post. Alt-text in the comments isn't easily accessible to screenreaders! Thank you!",
-            "energyUsageMessage": "🌱 Energy used: %.3f Wh"
+            "energyUsageMessage": "🌱 Energy used: %.3f Wh",
+            "carbonFootprintMessage": "🫧 Carbon footprint: %s"
         }
     },
     "ru": {
@@ -33,7 +34,8 @@
             "providedByMessage": "Предоставлено @%s, сгенерировано с использованием %s",
             "providedByMessageLocal": "Предоставлено @%s, сгенерировано локально и приватно с использованием %s",
             "altTextReminder": "Привет, @%s, пожалуйста, добавьте текстовые описания к своим изображениям, отредактировав свой пост. Текстовые описания в комментариях недоступны для скринридеров! Спасибо!",
-            "energyUsageMessage": "🌱 Использовано энергии: %.3f Wh"
+            "energyUsageMessage": "🌱 Использовано энергии: %.3f Wh",
+            "carbonFootprintMessage": "🫧 Углеродный след: %s"
         }
     },
     "be": {
@@ -50,7 +52,8 @@
             "providedByMessage": "Прадастаўлена @%s, створана з выкарыстаннем %s",
             "providedByMessageLocal": "Прадастаўлена @%s, створана лакальна і прыватна з выкарыстаннем %s",
             "altTextReminder": "Прывітанне, @%s, калі ласка, дадайце тэкставыя апісанні да вашых малюнкаў, адрэдагаваўшы свой пост. Тэксты ў каментарыях складана даступныя экранным чытальнікам! Дзякуй!",
-            "energyUsageMessage": "🌱 Выкарыстана энергіі: %.3f Wh"
+            "energyUsageMessage": "🌱 Выкарыстана энергіі: %.3f Wh",
+            "carbonFootprintMessage": "🫧 Вугляродны след: %s"
         }
     },
     "es": {
@@ -67,7 +70,8 @@
             "providedByMessage": "Proporcionado por @%s, generado usando %s",
             "providedByMessageLocal": "Proporcionado por @%s, generado de forma privada y local usando %s",
             "altTextReminder": "Hola @%s, por favor añade texto alternativo a tus imágenes editando tu publicación. ¡El texto alternativo en los comentarios no es fácilmente accesible para lectores de pantalla! ¡Gracias!",
-            "energyUsageMessage": "🌱 Energía utilizada: %.3f Wh"
+            "energyUsageMessage": "🌱 Energía utilizada: %.3f Wh",
+            "carbonFootprintMessage": "🫧 Huella de carbono: %s"
         }
     },
     "fr": {
@@ -84,7 +88,8 @@
             "providedByMessage": "Fourni par @%s, généré en utilisant %s",
             "providedByMessageLocal": "Fourni par @%s, généré localement et en privé en utilisant %s",
             "altTextReminder": "Bonjour @%s, veuillez ajouter du texte alternatif à vos images en modifiant votre publication. Le texte alternatif dans les commentaires n'est pas facilement accessible aux lecteurs d'écran ! Merci !",
-            "energyUsageMessage": "🌱 Énergie utilisée : %.3f Wh"
+            "energyUsageMessage": "🌱 Énergie utilisée : %.3f Wh",
+            "carbonFootprintMessage": "🫧 Empreinte carbone : %s"
         }
     },
     "de": {
@@ -101,7 +106,8 @@
             "providedByMessage": "Bereitgestellt von @%s, generiert mit %s",
             "providedByMessageLocal": "Bereitgestellt von @%s, privat und lokal generiert mit %s",
             "altTextReminder": "Hallo @%s, bitte füge Alt-Text zu deinen Bildern hinzu, indem du deinen Beitrag bearbeitest. Alt-Text in den Kommentaren ist für Screenreader nur schwer zugänglich! Danke!",
-            "energyUsageMessage": "🌱 Energieverbrauch: %.3f Wh"
+            "energyUsageMessage": "🌱 Energieverbrauch: %.3f Wh",
+            "carbonFootprintMessage": "🫧 CO2-Fußabdruck: %s"
         }
     },
     "it": {
@@ -118,7 +124,8 @@
             "providedByMessage": "Fornito da @%s, generato utilizzando %s",
             "providedByMessageLocal": "Fornito da @%s, generato localmente e privatamente utilizzando %s",
             "altTextReminder": "Ciao @%s, per favore aggiungi testo alternativo alle tue immagini modificando il tuo post. Il testo alternativo nei commenti non è facilmente accessibile dai lettori di schermo! Grazie!",
-            "energyUsageMessage": "🌱 Energia utilizzata: %.3f Wh"
+            "energyUsageMessage": "🌱 Energia utilizzata: %.3f Wh",
+            "carbonFootprintMessage": "🫧 Impronta di carbonio: %s"
         }
     },
     "ja": {
@@ -135,7 +142,8 @@
             "providedByMessage": "@%s によって提供され、%s を使用して生成されました",
             "providedByMessageLocal": "@%s によって提供され、%s を使用してローカルでプライベートに生成されました",
             "altTextReminder": "こんにちは @%s、投稿を編集して画像に代替テキストを追加してください。コメント内の代替テキストはスクリーンリーダーでは簡単にアクセスできません！ありがとうございます！",
-            "energyUsageMessage": "🌱 エネルギー使用量: %.3f Wh"
+            "energyUsageMessage": "🌱 エネルギー使用量: %.3f Wh",
+            "carbonFootprintMessage": "🫧 カーボンフットプリント：%s"
         }
     },
     "zh": {
@@ -152,7 +160,8 @@
             "providedByMessage": "由 @%s 提供，使用 %s 生成",
             "providedByMessageLocal": "由 @%s 提供，使用 %s 在本地私密生成",
             "altTextReminder": "您好，@%s，请通过编辑帖子为您的图片添加替代文本。评论中的替代文本对屏幕阅读器不易访问！谢谢！",
-            "energyUsageMessage": "🌱 能源消耗：%.3f 瓦时"
+            "energyUsageMessage": "🌱 能源消耗：%.3f 瓦时",
+            "carbonFootprintMessage": "🫧 碳足迹：%s"
         }
     },
     "pt": {
@@ -169,7 +178,8 @@
             "providedByMessage": "Fornecido por @%s, gerado usando %s",
             "providedByMessageLocal": "Fornecido por @%s, gerado localmente e de forma privada usando %s",
             "altTextReminder": "Olá @%s, por favor adicione texto alternativo às suas imagens editando sua postagem. O texto alternativo nos comentários não é facilmente acessível para leitores de tela! Obrigado!",
-            "energyUsageMessage": "🌱 Energia utilizada: %.3f Wh"
+            "energyUsageMessage": "🌱 Energia utilizada: %.3f Wh",
+            "carbonFootprintMessage": "🫧 Pegada de carbono: %s"
         }
     },
     "ko": {
@@ -186,7 +196,8 @@
             "providedByMessage": "@%s 에 의해 제공되었으며 %s 를 사용하여 생성되었습니다",
             "providedByMessageLocal": "@%s 에 의해 제공되었으며 %s 를 사용하여 로컬에서 비공개로 생성되었습니다",
             "altTextReminder": "안녕하세요 @%s, 게시물을 편집하여 이미지에 대체 텍스트를 추가해 주세요. 댓글에 있는 대체 텍스트는 화면 판독기에 쉽게 접근할 수 없습니다! 감사합니다!",
-            "energyUsageMessage": "🌱 에너지 사용량: %.3f Wh"
+            "energyUsageMessage": "🌱 에너지 사용량: %.3f Wh",
+            "carbonFootprintMessage": "🫧 탄소 발자국: %s"
         }
     },
     "pl": {
@@ -206,7 +217,8 @@
             "providedByMessage": "Dostarczone przez @%s, wygenerowane za pomocą %s",
             "providedByMessageLocal": "Dostarczone przez @%s, wygenerowane lokalnie i prywatnie za pomocą %s",
             "altTextReminder": "Cześć @%s, proszę dodaj alt-tekst edytując swój wpis — alt-tekst w komentarzach jest trudno dostępny dla czytników ekranu! Dziękuję!",
-            "energyUsageMessage": "🌱 Zużyta energia: %.3f Wh"
+            "energyUsageMessage": "🌱 Zużyta energia: %.3f Wh",
+            "carbonFootprintMessage": "🫧 Ślad węglowy: %s"
         }
     },
     "eu": {
@@ -226,7 +238,8 @@
             "providedByMessage": "@%s-ek emana, %s erabiliz sortua",
             "providedByMessageLocal": "@%s-ek emana, %s erabiliz pribatuan eta lokalean sortua",
             "altTextReminder": "Kaixo @%s, mesedez gehitu alt-testua zure irudiei zure argitalpena editatuz. Iruzkinetan dagoen alt-testua ez da erraz iristen pantaila-irakurgailuetara! Mila esker!",
-            "energyUsageMessage": "🌱 Erabilitako energia: %.3f Wh"
+            "energyUsageMessage": "🌱 Erabilitako energia: %.3f Wh",
+            "carbonFootprintMessage": "🫧 Karbono-aztarna: %s"
         }
     }
 }
