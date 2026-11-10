@@ -80,18 +80,44 @@ func runSetupWizard(filePath string) {
 	config.Metrics.DashboardEnabled = promptBool(Blue+"Enable Metrics Dashboard (true/false)?"+Reset, fmt.Sprintf("%t", config.Metrics.DashboardEnabled))
 	config.AltTextReminders.Enabled = promptBool(Cyan+"Enable Alt-Text Reminders (true/false)?"+Reset, fmt.Sprintf("%t", config.AltTextReminders.Enabled))
 
-	// Power metrics section (only relevant for local models)
+	// Power and carbon metrics section (only relevant for local models)
 	if config.LLM.Provider == "ollama" || config.LLM.Provider == "transformers" {
-		fmt.Println(Green + "\nPower Metrics Settings:" + Reset)
-		fmt.Println("This feature shows the estimated electricity used for each alt-text generation.")
+		fmt.Println(Green + "\nPower and Carbon Footprint Settings:" + Reset)
+		fmt.Println("This feature shows the estimated electricity and CO2e used for each alt-text generation.")
 
-		config.PowerMetrics.Enabled = promptBool(Cyan+"Enable Power Consumption Metrics (true/false)?"+Reset, fmt.Sprintf("%t", config.PowerMetrics.Enabled))
+		config.PowerMetrics.Enabled = promptBool(Cyan+"Enable Power and Carbon Metrics (true/false)?"+Reset, fmt.Sprintf("%t", config.PowerMetrics.Enabled))
 
 		if config.PowerMetrics.Enabled {
-			// Convert the float to a string for the prompt
+			// Convert the floats to strings for the prompts
 			gpuWattsStr := fmt.Sprintf("%.1f", config.PowerMetrics.GPUWatts)
 			gpuWattsInput := promptString(Yellow+"GPU Power Consumption (watts):"+Reset, gpuWattsStr)
 			config.PowerMetrics.GPUWatts = parseFloat(gpuWattsInput, config.PowerMetrics.GPUWatts)
+
+			fmt.Println("The rest of the server (CPU, RAM, storage, PSUs, fans) also draws power while generating.")
+			fmt.Println("Allocate the share that belongs to this bot, in watts. Use 0 if the bot has the whole machine.")
+			nonGPUPowerStr := fmt.Sprintf("%.1f", config.PowerMetrics.NonGPUPower)
+			nonGPUPowerInput := promptString(Yellow+"Allocated non-GPU server power (watts):"+Reset, nonGPUPowerStr)
+			config.PowerMetrics.NonGPUPower = parseFloat(nonGPUPowerInput, config.PowerMetrics.NonGPUPower)
+
+			fmt.Println("The PUE scales the server draw to the whole facility (cooling, lighting, losses).")
+			fmt.Println("Ask your data centre for the real figure, 1.35 is the North American average for 2026.")
+			pueStr := fmt.Sprintf("%.2f", config.PowerMetrics.PUE)
+			pueInput := promptString(Yellow+"PUE:"+Reset, pueStr)
+			config.PowerMetrics.PUE = parseFloat(pueInput, config.PowerMetrics.PUE)
+
+			fmt.Println("The carbon intensity of the grid the server is plugged into, in gCO2e per kWh.")
+			fmt.Println("Use the local mix (state or country), not the contractual supplier. Set to 0 to show energy only.")
+			gridStr := fmt.Sprintf("%.1f", config.PowerMetrics.GridCarbonIntensity)
+			gridInput := promptString(Yellow+"Grid carbon intensity (gCO2e/kWh):"+Reset, gridStr)
+			config.PowerMetrics.GridCarbonIntensity = parseFloat(gridInput, config.PowerMetrics.GridCarbonIntensity)
+
+			if config.PowerMetrics.GridCarbonIntensity > 0 {
+				fmt.Println("The manufacturing of the hardware also emits CO2e. Amortise it over the time the hardware is used.")
+				fmt.Println("Enter the allocated embodied carbon divided by the lifetime, in gCO2e per second of generation (see CARBON.md).")
+				embodiedStr := fmt.Sprintf("%.6f", config.PowerMetrics.EmbodiedCarbonPerSecond)
+				embodiedInput := promptString(Yellow+"Embodied carbon (gCO2e per second):"+Reset, embodiedStr)
+				config.PowerMetrics.EmbodiedCarbonPerSecond = parseFloat(embodiedInput, config.PowerMetrics.EmbodiedCarbonPerSecond)
+			}
 		}
 	}
 

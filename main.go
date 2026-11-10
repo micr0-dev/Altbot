@@ -46,7 +46,7 @@ import (
 )
 
 // Version of the bot
-const Version = "2.6"
+const Version = "2.7"
 
 // AsciiArt is the ASCII art for the bot
 const AsciiArt = `    _   _ _   _        _   
@@ -138,10 +138,7 @@ type Config struct {
 		DashboardEnabled bool `toml:"dashboard_enabled"`
 		DashboardPort    int  `toml:"dashboard_port"`
 	} `toml:"metrics"`
-	PowerMetrics struct {
-		Enabled  bool    `toml:"enabled"`
-		GPUWatts float64 `toml:"gpu_watts"`
-	} `toml:"power_metrics"`
+	PowerMetrics PowerMetricsConfig `toml:"power_metrics"`
 	RateLimit struct {
 		Enabled                        bool   `toml:"enabled"`
 		MaxRequestsPerMinute           int    `toml:"max_requests_per_user_per_minute"`
@@ -486,10 +483,18 @@ func main() {
 
 	fmt.Printf("%s Public API: %v\n", getStatusSymbol(config.API.Enabled), config.API.Enabled)
 
-	// Display power metrics status if using a local model
+	// Display power and carbon metrics status if using a local model
 	if config.LLM.Provider != "gemini" {
-		powerMetricsStatus := fmt.Sprintf("%v (%.1f watts)", config.PowerMetrics.Enabled, config.PowerMetrics.GPUWatts)
-		fmt.Printf("%s Power Consumption Metrics: %s\n", getStatusSymbol(config.PowerMetrics.Enabled), powerMetricsStatus)
+		powerMetricsStatus := fmt.Sprintf("%v (%.1f W GPU + %.1f W server, PUE %.2f)", config.PowerMetrics.Enabled, config.PowerMetrics.GPUWatts, config.PowerMetrics.effectiveNonGPUPower(), config.PowerMetrics.effectivePUE())
+		fmt.Printf("%s Power and Carbon Metrics: %s\n", getStatusSymbol(config.PowerMetrics.Enabled), powerMetricsStatus)
+		if config.PowerMetrics.Enabled {
+			if config.PowerMetrics.carbonEnabled() {
+				carbonStatus := fmt.Sprintf("%.1f gCO2e/kWh grid, %.6f gCO2e/s embodied", config.PowerMetrics.GridCarbonIntensity, config.PowerMetrics.EmbodiedCarbonPerSecond)
+				fmt.Printf("%s Carbon Footprint: %s\n", getStatusSymbol(true), carbonStatus)
+			} else {
+				fmt.Printf("%s Carbon Footprint: disabled (grid_carbon_intensity is 0)\n", getStatusSymbol(false))
+			}
+		}
 	}
 
 	fmt.Println("\n-----------------------------------")
@@ -998,11 +1003,9 @@ func generateAndPostAltText(c *mastodon.Client, status *mastodon.Status, replyTo
 		combinedResponse = fmt.Sprintf("%s\n\n%s", getProviderAttribution(config, replyPost.Language), combinedResponse)
 	}
 
-	// Add power consumption information at the end if enabled and using a local model
+	// Add energy and carbon footprint information at the end if enabled and using a local model
 	if config.PowerMetrics.Enabled && isLocalModel && altTextGenerated {
-		powerConsumption := calculatePowerConsumption(totalProcessingTimeMs, config.PowerMetrics.GPUWatts)
-		powerInfo := fmt.Sprintf("\n\n"+getLocalizedString(replyPost.Language, "energyUsageMessage", "response"), powerConsumption)
-		combinedResponse += powerInfo
+		combinedResponse += getFootprintMessage(replyPost.Language, totalProcessingTimeMs)
 	}
 
 	// Post the combined response

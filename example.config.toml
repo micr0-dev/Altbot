@@ -106,8 +106,15 @@ dashboard_enabled = true # Set to false to disable the metrics dashboard
 dashboard_port = 8080 # Port for the metrics dashboard
 
 [power_metrics]
-enabled = true                # Whether to show power consumption
-gpu_watts = 75                # Constant power consumption in watts
+enabled = true                # Whether to show energy and carbon footprint
+
+gpu_watts = 75                # GPU power draw during generation, in watts
+non_gpu_watts = 3.4           # Allocated draw of the rest of the server (CPU, RAM, storage, PSUs, fans), in watts. Use 0 if the bot has the whole machine.
+pue = 1.35                    # PUE of the data centre: scales the server draw to the whole facility. 1.35 is the North American average for 2026, ask your DC for the real figure.
+
+grid_carbon_intensity = 0     # Carbon intensity of the grid the server is plugged into, in gCO2e/kWh (local mix, not the contractual supplier). Set to 0 to display energy only.
+embodied_carbon_gco2e_per_second = 0  # Manufacturing footprint allocated to one second of generation, in gCO2e/s (see CARBON.md). Set to 0 to leave hardware out.
+
 show_comparison = true        # Whether to show comparison to cloud AI
 cloud_kwh_per_request = 0.0005  # Estimated kWh per request for cloud AI
 
