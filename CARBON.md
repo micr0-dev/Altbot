@@ -202,18 +202,8 @@ energy line; Altbot will not display a carbon total it cannot justify.
   season, the load, and the cooling design.
 - Grid intensity varies by the hour. A yearly average is used, not the
   marginal emissions of the moment the request was served.
-- **Training of the model is out of scope, and that is a real gap rather than a
-  rounding error.** Training a model has a large footprint, but allocating it to
-  a single request needs the number of users the model will ever have, and for
-  an open-weights model nobody knows whether that is a hundred or ten million.
-  In a world where a model is trained once and used for a decade, the per-request
-  share would be negligible. Where new models ship constantly and users move to
-  the next one, it may well be comparable to inference, and there is currently no
-  defensible way to divide it. Closed-weight providers can attempt it from public
-  information (see [SNCF's ImpactIA](https://github.com/SNCFdevelopers/ImpactIA));
-  open-weight models cannot. Treat every number here as inference only.
-- The embodied carbon of the network, of the client device, and of the storage of
-  the generated text are also out of scope.
+- The embodied carbon of the network, of the client device, and of the training
+  of the model are out of scope. So is the storage of the generated text.
 - The allocation assumes the GPU is used by the bot and by nothing else. If it
   is shared, the GPU share should be reduced accordingly.
 
