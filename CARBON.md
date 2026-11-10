@@ -130,6 +130,13 @@ So roughly **48 mgCO2e per second** of GPU time, of which **29 mg** is hardware
 and **19 mg** is electricity. Everything that is not the GPU or the electricity
 is negligible for this allocation.
 
+Note the unit: 48 mgCO2e is **0.048 gCO2e**, forty-eight thousandths of a gram of
+CO2e. It is written in milligrams because the number is much easier to read that
+way, not because it is a different quantity. `carbon_test.go`
+(`TestMatchesReviewedSheet`, `TestUnitsAreGramsNotMilligrams`) pins every
+per-second figure above against the reviewed spreadsheet, including that
+conversion.
+
 Which yields, for the configuration above:
 
 ```toml

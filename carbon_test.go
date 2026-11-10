@@ -7,6 +7,7 @@ package main
 
 import (
 	"math"
+	"strings"
 	"testing"
 )
 
@@ -134,6 +135,138 @@ func TestFormatCarbonFootprint(t *testing.T) {
 		if got := formatCarbonFootprint(c.grams); got != c.want {
 			t.Errorf("formatCarbonFootprint(%.4f) = %q, want %q", c.grams, got, c.want)
 		}
+	}
+}
+
+// Reference values taken from the reviewed spreadsheet (Vincent Bernstein,
+// CC-BY-SA 4.0), in kgCO2e per second. If any of these tests fail, the
+// implementation has drifted from the published methodology.
+const (
+	sheetGPU   = 2.89719660013979e-05
+	sheetRAM   = 2.39551141116850e-09
+	sheetCPU   = 2.27853355467623e-09
+	sheetSSD   = 4.73080745344796e-09
+	sheetOther = 1.47277589953839e-08
+	sheetElec  = 1.88610633649479e-05
+	sheetTotal = 4.78571619777605e-05
+
+	// B37 of the sheet: power allocated to the generation, in watts.
+	sheetAllocatedW = 203.435486111111
+	// B38 of the sheet: facility draw relative to the GPU draw alone.
+	sheetRatio = 1.37318953125
+)
+
+// sheetConfig returns the configuration that reproduces the reviewed sheet.
+func sheetConfig() PowerMetricsConfig {
+	return PowerMetricsConfig{
+		Enabled:                 true,
+		GPUWatts:                200,
+		NonGPUPower:             sheetAllocatedW - 200,
+		PUE:                     1.35,
+		GridCarbonIntensity:     247.234,
+		EmbodiedCarbonPerSecond: (sheetGPU + sheetRAM + sheetCPU + sheetSSD + sheetOther) * 1000,
+	}
+}
+
+// TestMatchesReviewedSheet checks the implementation against every published
+// per-second figure: the facility draw, the operational and embodied split, the
+// total, and the shares quoted in the review.
+func TestMatchesReviewedSheet(t *testing.T) {
+	pm := sheetConfig()
+
+	// Facility watts: 203.435 W allocated, scaled by the PUE.
+	if got, want := pm.facilityWatts(), sheetAllocatedW*1.35; math.Abs(got-want) > 1e-6 {
+		t.Errorf("facilityWatts() = %.9f W, sheet says %.9f W", got, want)
+	}
+
+	// The draw is 37 % above the 200 W of the GPU alone (sheet B38).
+	if got := pm.facilityWatts() / 200; math.Abs(got-sheetRatio) > 1e-9 {
+		t.Errorf("facility draw is %.9f x the GPU draw, sheet says %.9f", got, sheetRatio)
+	}
+
+	// Exactly one second, so the values are directly comparable.
+	fp := calculateFootprint(1000, pm)
+
+	if got, want := fp.OperationalCO2eG, sheetElec*1000; math.Abs(got-want) > 1e-12 {
+		t.Errorf("operational CO2e = %.12e g/s, sheet says %.12e", got, want)
+	}
+
+	embodiedTotal := (sheetGPU + sheetRAM + sheetCPU + sheetSSD + sheetOther) * 1000
+	if got, want := fp.EmbodiedCO2eG, embodiedTotal; math.Abs(got-want) > 1e-12 {
+		t.Errorf("embodied CO2e = %.12e g/s, sheet says %.12e", got, want)
+	}
+
+	if got, want := fp.TotalCO2eG(), sheetTotal*1000; math.Abs(got-want) > 1e-12 {
+		t.Errorf("total CO2e = %.12e g/s, sheet says %.12e", got, want)
+	}
+
+	// The headline figure: about 48 mgCO2e per second.
+	if got := fp.TotalCO2eG() * 1000; math.Abs(got-47.857) > 0.001 {
+		t.Errorf("total = %.4f mgCO2e/s, want 47.857", got)
+	}
+
+	// GPU manufacturing is 60.5 % and electricity 39.4 % of the total.
+	gpuShare := sheetGPU * 1000 / fp.TotalCO2eG() * 100
+	if math.Abs(gpuShare-60.54) > 0.01 {
+		t.Errorf("GPU manufacturing share = %.2f %%, want 60.54 %%", gpuShare)
+	}
+	elecShare := fp.OperationalCO2eG / fp.TotalCO2eG() * 100
+	if math.Abs(elecShare-39.41) > 0.01 {
+		t.Errorf("electricity share = %.2f %%, want 39.41 %%", elecShare)
+	}
+
+	// Everything that is not the GPU or the electricity is negligible, and the
+	// three shares must account for the whole.
+	restShare := 100 - gpuShare - elecShare
+	if math.Abs(restShare-0.05) > 0.01 {
+		t.Errorf("remaining share = %.2f %%, want 0.05 %%", restShare)
+	}
+}
+
+// TestUnitsAreGramsNotMilligrams guards the unit conversion between the sheet
+// (kgCO2e/s) and the config (gCO2e/s). The whole footprint is well under a
+// gram per second, so a factor of 1000 in either direction is immediately
+// visible here.
+func TestUnitsAreGramsNotMilligrams(t *testing.T) {
+	fp := calculateFootprint(1000, sheetConfig())
+
+	// 47.86 mg/s is 0.04786 g/s. A result near 47.86 would mean the value was
+	// left in mg, and one near 4.786e-5 would mean it was left in kg.
+	if fp.TotalCO2eG() < 0.04 || fp.TotalCO2eG() > 0.06 {
+		t.Fatalf("total = %g for one second, want ~0.0479 g; a unit conversion is wrong", fp.TotalCO2eG())
+	}
+}
+
+// TestRenderedUnits checks the displayed string for a one second generation,
+// which is the case where mgCO2e must be used rather than gCO2e.
+func TestRenderedMessage(t *testing.T) {
+	if err := loadLocalizations(); err != nil {
+		t.Fatalf("loading localizations: %v", err)
+	}
+
+	config.Localization.DefaultLanguage = "en"
+	config.PowerMetrics = sheetConfig()
+
+	message := getFootprintMessage("en", 1000)
+	if !strings.Contains(message, "48 mgCO2e") {
+		t.Errorf("one second should render as 48 mgCO2e, got %q", message)
+	}
+	if !strings.Contains(message, "Energy used") {
+		t.Errorf("energy line missing from %q", message)
+	}
+
+	// Above a gram the unit switches.
+	message = getFootprintMessage("en", 30000)
+	if !strings.Contains(message, "1.44 gCO2e") {
+		t.Errorf("thirty seconds should render as 1.44 gCO2e, got %q", message)
+	}
+
+	// Without a grid intensity the carbon line is absent, not zero.
+	pm := sheetConfig()
+	pm.GridCarbonIntensity = 0
+	config.PowerMetrics = pm
+	if message := getFootprintMessage("en", 30000); strings.Contains(message, "Carbon") {
+		t.Errorf("carbon line should be hidden without a grid intensity, got %q", message)
 	}
 }
 
