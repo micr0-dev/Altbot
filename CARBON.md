@@ -71,19 +71,35 @@ Illinois, United States.
 | Item | Value | Source |
 | --- | --- | --- |
 | GPU draw during generation | 200 W | measured |
-| Allocated rest of the server | 3.4 W | derived, see below |
+| Allocated rest of the server | 3.4355 W | derived, see below |
 | PUE | 1.35 | North American average, 2026 |
-| **Facility draw** | **275 W** | (200 + 3.4) × 1.35 |
+| **Facility draw** | **274.6 W** | (200 + 3.4355) × 1.35 |
 
 That is 37 % more than the 200 W of the GPU alone, which is what previous
 versions of Altbot reported.
 
-The 3.4 W of non-GPU draw comes from allocating the server's own consumption the
+> **One inconsistency in the reviewed calculation.** The sheet's own power cell
+> (`B37`) computes 203.435486111111 W, which is 3.4355 W on top of the GPU, and
+> the 275 W and the 37 % above both follow from that figure. But the formula in
+> that cell does not produce it. Read literally it is
+> `(4/128×3 + 0.055×4) + (2/72×36×0.75×140/72) + (4/2160×2160×8) + 230`, i.e.
+> `0.31375 + 1.45833 + 32 + 230 = 263.77 W`, which would put the facility draw at
+> 356 W and the increase at 78 %. Most of the gap is the SSD term: the
+> `×4/2160` and `×2160` cancel, so it charges 8 W per drive for four drives
+> rather than the ~1 W of an active SAS SSD. The `+230` term is a placeholder
+> for the rest of the server, and the value it holds (230 W) also contradicts
+> the "3.4 W" description.
+>
+> The totals documented here use the **result** of that cell, because that is
+> what was reviewed, quoted, and published. The formula should be corrected in
+> the source spreadsheet; if it is, the numbers above will need revisiting.
+
+The 3.4355 W of non-GPU draw comes from allocating the server's own consumption the
 way the hardware is shared. The GPU is dedicated to Altbot, so the whole GPU
 draw is charged to it. Everything else is allocated by usage: 1/72 of the idle
 baseline (1 vCPU out of 72), the full share of the SSD mirror that is dedicated
 to the bot, and 1/72 of the shared boot SSDs and HDDs. For the Altbot host this
-comes out at 3.4 W. On a busier or larger machine, or one where the bot has less
+comes out at 3.4355 W. On a busier or larger machine, or one where the bot has less
 of the hardware to itself, it will be higher.
 
 **Electricity**
@@ -143,7 +159,7 @@ Which yields, for the configuration above:
 [power_metrics]
 enabled = true
 gpu_watts = 200
-non_gpu_watts = 3.4
+non_gpu_watts = 3.4355
 pue = 1.35
 grid_carbon_intensity = 247
 embodied_carbon_gco2e_per_second = 0.0290

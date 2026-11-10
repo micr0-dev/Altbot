@@ -31,9 +31,10 @@ const (
 
 	// DefaultNonGPUPower is the power allocated to the rest of the server
 	// (CPU, RAM, SSDs, PSUs, fans, motherboard) for a generation, in watts.
-	// For the Altbot host this comes out at ~3.4 W once the 1/72 share of the
-	// idle baseline and the full share of the dedicated storage are applied.
-	DefaultNonGPUPower = 3.4
+	// For the Altbot host the review puts the allocated draw at 203.4355 W
+	// against a 200 W GPU, i.e. 3.4355 W for the rest, which is the "about
+	// 3.4 W" quoted in CARBON.md.
+	DefaultNonGPUPower = 3.4355
 
 	secondsPerHour     = 3600.0
 	millisecondsPerSec = 1000.0
