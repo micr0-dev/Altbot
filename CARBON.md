@@ -78,22 +78,6 @@ Illinois, United States.
 That is 37 % more than the 200 W of the GPU alone, which is what previous
 versions of Altbot reported.
 
-> **One inconsistency in the reviewed calculation.** The sheet's own power cell
-> (`B37`) computes 203.435486111111 W, which is 3.4355 W on top of the GPU, and
-> the 275 W and the 37 % above both follow from that figure. But the formula in
-> that cell does not produce it. Read literally it is
-> `(4/128×3 + 0.055×4) + (2/72×36×0.75×140/72) + (4/2160×2160×8) + 230`, i.e.
-> `0.31375 + 1.45833 + 32 + 230 = 263.77 W`, which would put the facility draw at
-> 356 W and the increase at 78 %. Most of the gap is the SSD term: the
-> `×4/2160` and `×2160` cancel, so it charges 8 W per drive for four drives
-> rather than the ~1 W of an active SAS SSD. The `+230` term is a placeholder
-> for the rest of the server, and the value it holds (230 W) also contradicts
-> the "3.4 W" description.
->
-> The totals documented here use the **result** of that cell, because that is
-> what was reviewed, quoted, and published. The formula should be corrected in
-> the source spreadsheet; if it is, the numbers above will need revisiting.
-
 The 3.4355 W of non-GPU draw comes from allocating the server's own consumption the
 way the hardware is shared. The GPU is dedicated to Altbot, so the whole GPU
 draw is charged to it. Everything else is allocated by usage: 1/72 of the idle

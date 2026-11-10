@@ -150,9 +150,10 @@ const (
 	sheetElec  = 1.88610633649479e-05
 	sheetTotal = 4.78571619777605e-05
 
-	// B37 of the sheet: power allocated to the generation, in watts.
+	// Power allocated to the generation, in watts: the 200 W GPU plus the
+	// 3.4355 W share of the rest of the server.
 	sheetAllocatedW = 203.435486111111
-	// B38 of the sheet: facility draw relative to the GPU draw alone.
+	// Facility draw relative to the GPU draw alone (274.6 W / 200 W).
 	sheetRatio = 1.37318953125
 )
 
@@ -179,7 +180,7 @@ func TestMatchesReviewedSheet(t *testing.T) {
 		t.Errorf("facilityWatts() = %.9f W, sheet says %.9f W", got, want)
 	}
 
-	// The draw is 37 % above the 200 W of the GPU alone (sheet B38).
+	// The draw is 37 % above the 200 W of the GPU alone.
 	if got := pm.facilityWatts() / 200; math.Abs(got-sheetRatio) > 1e-9 {
 		t.Errorf("facility draw is %.9f x the GPU draw, sheet says %.9f", got, sheetRatio)
 	}
