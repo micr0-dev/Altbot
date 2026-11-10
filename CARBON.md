@@ -78,13 +78,28 @@ Illinois, United States.
 That is 37 % more than the 200 W of the GPU alone, which is what previous
 versions of Altbot reported.
 
-The 3.4355 W of non-GPU draw comes from allocating the server's own consumption the
-way the hardware is shared. The GPU is dedicated to Altbot, so the whole GPU
-draw is charged to it. Everything else is allocated by usage: 1/72 of the idle
-baseline (1 vCPU out of 72), the full share of the SSD mirror that is dedicated
-to the bot, and 1/72 of the shared boot SSDs and HDDs. For the Altbot host this
-comes out at 3.4355 W. On a busier or larger machine, or one where the bot has less
-of the hardware to itself, it will be higher.
+The 3.4355 W of non-GPU draw comes from allocating the server's own consumption
+the way the hardware is shared. The GPU is dedicated to Altbot, so the whole GPU
+draw is charged to it. Everything else is allocated by usage, and the basis
+follows the resource rather than being one uniform number:
+
+| Resource | Allocated | Basis |
+| --- | --- | --- |
+| GPU | 100 % | dedicated to the bot |
+| CPU | 1/72 vCPU (1.39 %) | share of the vCPUs |
+| RAM | 0.5 GB of 128 GB (0.39 %) | measured usage during generation |
+| SSD | 30 GB of 2 160 GB (1.39 %) | 1/72 of the storage |
+| Rest of the equipment | 1/72 (1.39 %) | share of the vCPUs |
+
+RAM is the exception: it is allocated on measured usage rather than on the CPU
+share. Altbot uses about 0.5 GB while generating, which is 0.39 % of the 128 GB
+installed, four times less than a 1/72 share would charge. The effect on the
+total is invisible, since RAM is 0.01 % of the footprint either way, but it is
+the correct basis: the bot does not reserve a slice of memory in proportion to
+its CPU share.
+
+For the Altbot host this comes out at 3.4355 W. On a busier or larger machine,
+or one where the bot has less of the hardware to itself, it will be higher.
 
 **Electricity**
 
@@ -164,8 +179,9 @@ To turn the carbon footprint on:
    country-level elsewhere. Do not use the figure from a renewable energy
    contract: the local mix is what the data centre actually draws on.
 2. **`pue`** — ask your data centre or hosting provider. If they do not know,
-   the North American average is around 1.35, European averages are lower
-   (around 1.2). A PUE below 1 is not physical and is ignored.
+   the North American average is around 1.35. The European Union average was
+   1.36 in 2024, per the European Commission's latest report, so do not assume
+   Europe is better. A PUE below 1 is not physical and is ignored.
 3. **`non_gpu_watts`** — the share of the rest of the machine that belongs to the
    bot. If the bot owns the whole machine, measure the server draw and subtract
    the GPU draw. If it shares the machine, allocate by the fraction of a shared
@@ -186,8 +202,18 @@ energy line; Altbot will not display a carbon total it cannot justify.
   season, the load, and the cooling design.
 - Grid intensity varies by the hour. A yearly average is used, not the
   marginal emissions of the moment the request was served.
-- The embodied carbon of the network, of the client device, and of the training
-  of the model are out of scope. So is the storage of the generated text.
+- **Training of the model is out of scope, and that is a real gap rather than a
+  rounding error.** Training a model has a large footprint, but allocating it to
+  a single request needs the number of users the model will ever have, and for
+  an open-weights model nobody knows whether that is a hundred or ten million.
+  In a world where a model is trained once and used for a decade, the per-request
+  share would be negligible. Where new models ship constantly and users move to
+  the next one, it may well be comparable to inference, and there is currently no
+  defensible way to divide it. Closed-weight providers can attempt it from public
+  information (see [SNCF's ImpactIA](https://github.com/SNCFdevelopers/ImpactIA));
+  open-weight models cannot. Treat every number here as inference only.
+- The embodied carbon of the network, of the client device, and of the storage of
+  the generated text are also out of scope.
 - The allocation assumes the GPU is used by the bot and by nothing else. If it
   is shared, the GPU share should be reduced accordingly.
 
