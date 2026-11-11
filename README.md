@@ -233,6 +233,12 @@ A heartfelt thank you to all my [Ko-fi](https://ko-fi.com/) supporters! Your gen
 
 This project is licensed under the [GNU AFFERO GENERAL PUBLIC LICENSE Version 3 (AGPLv3).](https://www.gnu.org/licenses/agpl-3.0.en.html) See the [LICENSE](LICENSE) file for details.
 
+## Reporting Security Issues
+
+If you find a security issue, please report it privately using the
+**Report a vulnerability** button on our
+[Security tab](https://github.com/micr0-dev/Altbot/security) rather than opening a public issue.
+
 ---
 
 Join us in making the Fediverse a more inclusive place for everyone!
